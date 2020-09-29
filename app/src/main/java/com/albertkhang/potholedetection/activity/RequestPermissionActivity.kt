@@ -8,5 +8,7 @@ class RequestPermissionActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_request_permission)
+        // TODO: get settings from Firebase
+        // TODO: handle request permission
     }
 }

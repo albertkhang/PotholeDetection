@@ -25,10 +25,8 @@ class SplashActivity : AppCompatActivity() {
         Handler(Looper.getMainLooper()).postDelayed({
             val intent: Intent
             if (NetworkUtil.isNetworkAvailable(baseContext)) {
-                Toast.makeText(baseContext, "onNetworkOn", Toast.LENGTH_SHORT).show()
                 intent = Intent(baseContext, RequestPermissionActivity::class.java)
             } else {
-                Toast.makeText(baseContext, "onNetworkOff", Toast.LENGTH_SHORT).show()
                 intent = Intent(baseContext, NoConnectionActivity::class.java)
             }
             startActivity(intent)

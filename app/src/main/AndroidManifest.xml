@@ -22,7 +22,7 @@
 
         <activity
             android:name=".activity.NoConnectionActivity"
-            android:theme="@style/AppTheme" />
+            android:theme="@style/TransparentStatusBarTheme" />
         <activity
             android:name=".activity.RequestPermissionActivity"
             android:theme="@style/AppTheme" />
