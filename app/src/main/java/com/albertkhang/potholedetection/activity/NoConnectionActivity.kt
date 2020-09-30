@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.widget.Toast
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.util.NetworkUtil
+import com.albertkhang.potholedetection.util.PermissionUtil
 import kotlinx.android.synthetic.main.activity_no_connection.*
 
 class NoConnectionActivity : AppCompatActivity() {
@@ -23,8 +24,15 @@ class NoConnectionActivity : AppCompatActivity() {
 
     private fun addEvent() {
         btnTryAgain.setOnClickListener {
-            if (NetworkUtil.isNetworkAvailable(baseContext)) {
-                val intent = Intent(baseContext, RequestPermissionActivity::class.java)
+            if (NetworkUtil.isNetworkAvailable(this@NoConnectionActivity)) {
+                val intent: Intent
+                if (!PermissionUtil.isGrantedPermissions(this@NoConnectionActivity)) {
+                    // do not grant permission yet
+                    intent = Intent(this@NoConnectionActivity, RequestPermissionActivity::class.java)
+                } else {
+                    // granted permission
+                    intent = Intent(this@NoConnectionActivity, MainActivity::class.java)
+                }
                 startActivity(intent)
                 finish()
             } else {

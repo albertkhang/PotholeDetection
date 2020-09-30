@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.albertkhang.potholedetection">
-
+    <!--NETWORK-->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!--LOCATION-->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!--READ/WRITE STORAGE-->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
         android:name=".activity.MyApp"
@@ -25,7 +31,7 @@
             android:theme="@style/TransparentStatusBarTheme" />
         <activity
             android:name=".activity.RequestPermissionActivity"
-            android:theme="@style/AppTheme" />
+            android:theme="@style/TransparentStatusBarTheme" />
         <activity
             android:name=".activity.SplashActivity"
             android:theme="@style/FullscreenTheme">
@@ -37,7 +43,7 @@
         </activity>
         <activity
             android:name=".activity.MainActivity"
-            android:theme="@style/AppTheme" />
+            android:theme="@style/TransparentStatusBarTheme" />
     </application>
 
 </manifest>
