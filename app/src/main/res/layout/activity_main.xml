@@ -38,4 +38,5 @@
         android:elevation="2dp"
         android:src="@drawable/ic_legend" />
 
+    <!--TODO: add bottom navigation-->
 </RelativeLayout>

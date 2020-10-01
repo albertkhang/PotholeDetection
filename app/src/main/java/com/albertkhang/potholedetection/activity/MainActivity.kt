@@ -5,16 +5,17 @@ import android.annotation.SuppressLint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
+import android.os.Handler
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.ProgressBar
 import android.widget.RelativeLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.albertkhang.potholedetection.animation.AlphaAnimation
 import com.albertkhang.potholedetection.R
+import com.albertkhang.potholedetection.animation.AlphaAnimation
 import com.albertkhang.potholedetection.util.DisplayUtil
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -50,13 +51,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         btnLegend.setOnClickListener {
+            if (mLegendView == null) {
+                initLegendView()
+            }
+
             addLegendView()
         }
     }
 
     private fun addLegendView() {
-        initLegendView()
-
         if (mLegendView != null) {
             val params = initLegendLayoutParams()
             root_view.addView(mLegendView, params)
@@ -107,7 +110,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun initLegendView() {
         val inflater = LayoutInflater.from(this)
-        mLegendView = inflater.inflate(R.layout.legend_popup, null, false)
+        mLegendView = inflater.inflate(R.layout.legend_popup, root_view, false)
 
         if (mLegendView != null) {
             val goodColor = ContextCompat.getColor(this, R.color.colorGoodLegend)
@@ -135,7 +138,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun initPreparingMapView() {
         val inflater = LayoutInflater.from(this)
-        mPreparingMapProgress = inflater.inflate(R.layout.view_preparing_map, null, false)
+        mPreparingMapProgress = inflater.inflate(R.layout.view_preparing_map, root_view, false)
     }
 
     private fun addPreparingMapProgress() {
