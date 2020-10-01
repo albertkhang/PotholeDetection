@@ -1,19 +1,19 @@
 package com.albertkhang.potholedetection.activity
 
+import android.animation.Animator
 import android.annotation.SuppressLint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.ProgressBar
 import android.widget.RelativeLayout
 import androidx.appcompat.app.AppCompatActivity
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
-import androidx.core.view.contains
+import com.albertkhang.potholedetection.animation.AlphaAnimation
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.util.DisplayUtil
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -24,7 +24,6 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.legend_popup.*
 
 @SuppressLint("MissingPermission")
 // Checked permissions before go to this activity
@@ -34,6 +33,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private val MAP_SCALE_VALUE = 16f
 
     private var mLegendView: View? = null
+    private lateinit var mPreparingMapProgress: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,16 +60,32 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         if (mLegendView != null) {
             val params = initLegendLayoutParams()
             root_view.addView(mLegendView, params)
-        }
+            mLegendView!!.visibility = View.INVISIBLE
+            btnLegend.isClickable = false
 
-        btnLegend.isClickable = false
+            AlphaAnimation.showViewAnimation(mLegendView, object : Animator.AnimatorListener {
+                override fun onAnimationStart(p0: Animator?) {
+                    mLegendView!!.visibility = View.VISIBLE
+                }
+
+                override fun onAnimationEnd(p0: Animator?) {
+                }
+
+                override fun onAnimationCancel(p0: Animator?) {
+                }
+
+                override fun onAnimationRepeat(p0: Animator?) {
+                }
+            })
+        }
     }
 
     private fun removeLegendView() {
         if (mLegendView != null) {
+            btnLegend.visibility = View.VISIBLE
+
             root_view.removeView(mLegendView)
             mLegendView = null
-
             btnLegend.isClickable = true
         }
     }
@@ -110,16 +126,30 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun addControl() {
+        initPreparingMapView()
+
         (map as SupportMapFragment).getMapAsync(this)
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        // TODO: add loading screen when getting current location
+    }
+
+    private fun initPreparingMapView() {
+        val inflater = LayoutInflater.from(this)
+        mPreparingMapProgress = inflater.inflate(R.layout.view_preparing_map, null, false)
+    }
+
+    private fun addPreparingMapProgress() {
+        val params = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+        root_view.addView(mPreparingMapProgress, params)
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-        mMap.setOnCameraMoveListener { removeLegendView() }
         initGoogleMap()
+        addPreparingMapProgress()
         moveToMyLocation()
     }
 
@@ -134,5 +164,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun initGoogleMap() {
         mMap.isMyLocationEnabled = true
         mMap.uiSettings.isMyLocationButtonEnabled = false
+        mMap.setOnCameraMoveListener { removeLegendView() }
+        mMap.setOnMapClickListener { removeLegendView() }
+        mMap.setOnMapLoadedCallback {
+            root_view.removeView(mPreparingMapProgress)
+        }
     }
 }
