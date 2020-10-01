@@ -1,19 +1,16 @@
 package com.albertkhang.potholedetection.activity
 
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.util.NetworkUtil
 import com.albertkhang.potholedetection.util.PermissionUtil
 
 class SplashActivity : AppCompatActivity() {
-    private val SPLASH_SCREEN_INTERVAL = 2 // seconds
+    private val SPLASH_SCREEN_TIME: Long = 2000 // milliseconds
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,6 +36,6 @@ class SplashActivity : AppCompatActivity() {
 
             startActivity(intent)
             finish()
-        }, SPLASH_SCREEN_INTERVAL * 1000L)
+        }, SPLASH_SCREEN_TIME)
     }
 }

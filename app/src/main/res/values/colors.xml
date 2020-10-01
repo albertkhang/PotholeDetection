@@ -13,4 +13,8 @@
     <color name="colorMain">#2699FB</color>
     <color name="colorBlueBackground">#F1F9FF</color>
     <color name="colorCancel">#E95E50</color>
+
+    <color name="colorGoodLegend">#2ECC71</color>
+    <color name="colorAverageLegend">#F1C40F</color>
+    <color name="colorBadLegend">#E74C3C</color>
 </resources>
