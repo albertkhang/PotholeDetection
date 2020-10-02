@@ -16,6 +16,7 @@ class SplashActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
+        // TODO: get settings from Firebase
         runWaitingTimer()
     }
 

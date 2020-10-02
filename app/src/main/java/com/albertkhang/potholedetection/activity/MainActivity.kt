@@ -5,8 +5,6 @@ import android.annotation.SuppressLint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
-import android.os.Handler
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -31,7 +29,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var mMap: GoogleMap
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
-    private val MAP_SCALE_VALUE = 16f
+    private val MAP_ZOOM = 16f
 
     private var mLegendView: View? = null
     private lateinit var mPreparingMapProgress: View
@@ -160,7 +158,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mFusedLocationClient.lastLocation.addOnSuccessListener {
             val current = LatLng(it.latitude, it.longitude)
             mMap.moveCamera(CameraUpdateFactory.newLatLng(current))
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, MAP_SCALE_VALUE))
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, MAP_ZOOM))
         }
     }
 

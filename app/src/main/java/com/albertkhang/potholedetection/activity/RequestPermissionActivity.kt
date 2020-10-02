@@ -20,7 +20,6 @@ class RequestPermissionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_request_permission)
 
-        // TODO: get settings from Firebase
         showRequestPermissionDialog()
     }
 
