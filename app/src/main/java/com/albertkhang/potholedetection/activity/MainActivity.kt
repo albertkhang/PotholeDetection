@@ -10,10 +10,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.RelativeLayout
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.animation.AlphaAnimation
+import com.albertkhang.potholedetection.broadcast.NetworkChangeReceiver
 import com.albertkhang.potholedetection.util.DisplayUtil
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -33,6 +35,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private var mLegendView: View? = null
     private lateinit var mPreparingMapProgress: View
+
+    private lateinit var mNetworkChangeReceiver: NetworkChangeReceiver
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -128,10 +132,26 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun addControl() {
         initPreparingMapView()
+        initNetworkChangeListener()
 
         (map as SupportMapFragment).getMapAsync(this)
-
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+    }
+
+    private fun initNetworkChangeListener() {
+        // TODO: show offline notice
+
+        mNetworkChangeReceiver = NetworkChangeReceiver()
+        mNetworkChangeReceiver.setOnNetworkChangeListener(object :
+            NetworkChangeReceiver.OnNetworkChangeListener {
+            override fun onNetworkOn() {
+                Toast.makeText(this@MainActivity, "You are online!", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onNetworkOff() {
+                Toast.makeText(this@MainActivity, "You are offline!", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
     private fun initPreparingMapView() {
@@ -170,5 +190,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.setOnMapLoadedCallback {
             root_view.removeView(mPreparingMapProgress)
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mNetworkChangeReceiver.register(this)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        mNetworkChangeReceiver.unregister(this)
     }
 }

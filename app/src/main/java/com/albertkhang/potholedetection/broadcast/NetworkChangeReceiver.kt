@@ -27,7 +27,7 @@ class NetworkChangeReceiver : BroadcastReceiver() {
         this.networkListener = networkListener
     }
 
-    override fun onReceive(context: Context?, p1: Intent?) {
+    override fun onReceive(context: Context?, intent: Intent?) {
         if (context != null) {
             if (networkListener != null && NetworkUtil.isNetworkAvailable(context)) {
                 networkListener!!.onNetworkOn()
