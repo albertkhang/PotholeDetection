@@ -2,9 +2,11 @@ package com.albertkhang.potholedetection.activity
 
 import android.animation.Animator
 import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,6 +18,11 @@ import androidx.core.content.ContextCompat
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.animation.AlphaAnimation
 import com.albertkhang.potholedetection.broadcast.NetworkChangeReceiver
+import com.albertkhang.potholedetection.model.IAGVector
+import com.albertkhang.potholedetection.model.IDatabase
+import com.albertkhang.potholedetection.model.IVector3D
+import com.albertkhang.potholedetection.sensor.AccelerometerSensor
+import com.albertkhang.potholedetection.util.CloudDatabase
 import com.albertkhang.potholedetection.util.DisplayUtil
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -29,6 +36,8 @@ import kotlinx.android.synthetic.main.activity_main.*
 @SuppressLint("MissingPermission")
 // Checked permissions before go to this activity
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
+    private var TAG = "MainActivity"
+
     private lateinit var mMap: GoogleMap
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
     private val MAP_ZOOM = 16f
@@ -38,12 +47,79 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mNetworkChangeReceiver: NetworkChangeReceiver
 
+    private lateinit var mAccelerometerSensor: AccelerometerSensor
+
+    companion object {
+        val agVector = IAGVector()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         addControl()
         addEvent()
+
+        readAll()
+
+        mAccelerometerSensor = object : AccelerometerSensor(this@MainActivity) {
+            override fun onUpdate(accelerometer: IVector3D?, gravity: IVector3D?) {
+                if (accelerometer != null && gravity != null) {
+                    agVector.ax = accelerometer.x
+                    agVector.ay = accelerometer.y
+                    agVector.az = accelerometer.z
+
+                    agVector.gx = gravity.x
+                    agVector.gy = gravity.y
+                    agVector.gz = gravity.z
+                }
+            }
+
+        }
+
+        btnAddAGSensor.setOnClickListener {
+            writeData(agVector)
+        }
+    }
+
+    private fun writeData(data: IDatabase) {
+        val cloudDatabase = CloudDatabase()
+        cloudDatabase.write(data) { documentReference ->
+            if (documentReference.isComplete) {
+                Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference.result.id}")
+                Toast.makeText(this@MainActivity, "Add Success", Toast.LENGTH_SHORT).show()
+            } else {
+                Log.e(TAG, "Error adding document", documentReference.exception)
+                Toast.makeText(this@MainActivity, "Add Failure", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun readAll() {
+        val cloudDatabase = CloudDatabase()
+        cloudDatabase.readAll(
+            CloudDatabase.COLLECTION_AG_VECTOR
+        ) { task ->
+            if (task.isSuccessful) {
+                for (document in task.result) {
+                    Log.d(TAG, "${document.id} => ${document.data}")
+                }
+            } else {
+                Log.e(TAG, "Error getting documents.", task.exception)
+            }
+        }
+
+        cloudDatabase.readAll(
+            CloudDatabase.COLLECTION_GPS
+        ) { task ->
+            if (task.isSuccessful) {
+                for (document in task.result) {
+                    Log.d(TAG, "${document.id} => ${document.data}")
+                }
+            } else {
+                Log.w(TAG, "Error getting documents.", task.exception)
+            }
+        }
     }
 
     private fun addEvent() {
@@ -195,10 +271,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onResume() {
         super.onResume()
         mNetworkChangeReceiver.register(this)
+        mAccelerometerSensor.start()
     }
 
     override fun onStop() {
         super.onStop()
         mNetworkChangeReceiver.unregister(this)
+        mAccelerometerSensor.stop()
     }
 }

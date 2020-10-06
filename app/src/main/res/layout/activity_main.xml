@@ -38,5 +38,14 @@
         android:elevation="2dp"
         android:src="@drawable/ic_legend" />
 
+    <Button
+        android:id="@+id/btnAddAGSensor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="add AG Sensor"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="35dp"/>
+
     <!--TODO: add bottom navigation-->
 </RelativeLayout>

@@ -8,7 +8,7 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:95597415349:android:8cc4ec078b625a65ebe7fc",
+        "mobilesdk_app_id": "1:95597415349:android:6d1ce2a662857d67ebe7fc",
         "android_client_info": {
           "package_name": "com.albertkhang.potholedetection"
         }
@@ -29,7 +29,7 @@
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCVGB1zcaKV5blVz4dySQkyCVTva9atr0o"
+          "current_key": "AIzaSyCqd7NUnxmsO8zYZ1ErSg5oYpYa-b5_n4Y"
         }
       ],
       "services": {

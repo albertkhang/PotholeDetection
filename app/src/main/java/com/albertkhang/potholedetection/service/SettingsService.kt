@@ -7,11 +7,11 @@ import retrofit2.http.Path
 
 interface SettingsService {
     companion object {
-        val SETTING_SERVICE_TAG = "SettingService"
-        val SETTING_SERVICE_VERSION_TAG = "SettingServiceVersion"
-        val SETTING_SERVICE_ALL_TAG = "SettingServiceAll"
-        val isLogVersion = true
-        val isLogAll = true
+        const val SETTING_SERVICE_TAG = "SettingService"
+        const val SETTING_SERVICE_VERSION_TAG = "SettingServiceVersion"
+        const val SETTING_SERVICE_ALL_TAG = "SettingServiceAll"
+        const val isLogVersion = false
+        const val isLogAll = false
     }
 
     @GET("{setting_type}/version.json")
