@@ -10,7 +10,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class SettingsUtil {
     companion object {
-        const val isDebugVersion = true
+        const val isDebugVersion = false
         private const val DATABASE_URL: String = "https://promising-env-291106.firebaseio.com/"
         private const val DEBUG_SETTINGS: String = "debug-settings"
         private const val RELEASE_SETTINGS: String = "release-settings"
@@ -39,7 +39,7 @@ class SettingsUtil {
     }
 
     /**
-     * Return all settings
+     * Return debug settings or release settings base on current settings type
      *
      * @callback onResponse
      * @callback onFailure
