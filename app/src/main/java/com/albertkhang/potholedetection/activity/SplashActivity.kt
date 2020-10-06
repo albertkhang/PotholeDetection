@@ -24,30 +24,58 @@ class SplashActivity : AppCompatActivity() {
         setContentView(R.layout.activity_splash)
 
         // TODO: add settings into database
-        getSettings()
-        runWaitingTimer()
+        checkConnection()
+    }
+
+    private fun checkConnection() {
+        if (NetworkUtil.isNetworkAvailable(this@SplashActivity)) {
+            getSettings()
+        } else {
+            showNoConnectionActivityAfterAWhile()
+        }
+    }
+
+    private fun getPermissionIntentResult(): Intent {
+        val intent: Intent
+        if (!PermissionUtil.isGrantedPermissions(this@SplashActivity)) {
+            // do not grant permission yet
+            intent = Intent(this@SplashActivity, RequestPermissionActivity::class.java)
+        } else {
+            // granted permission
+            intent = Intent(this@SplashActivity, MainActivity::class.java)
+        }
+
+        return intent
     }
 
     private fun getSettings() {
         val settingsUtil = SettingsUtil()
 
-        settingsUtil.getSettingVersion(object : Callback<Int> {
-            override fun onResponse(call: Call<Int>, response: Response<Int>) {
-                if (response.code() == 200) {
-                    Log.d(SETTING_SERVICE_TAG, "version: ${response.body()}")
-                }
-            }
-
-            override fun onFailure(call: Call<Int>, throwable: Throwable) {
-                Log.d(SETTING_SERVICE_TAG, throwable.message.toString())
-            }
-
-        })
+//        settingsUtil.getSettingVersion(object : Callback<Int> {
+//            override fun onResponse(call: Call<Int>, response: Response<Int>) {
+//                if (response.code() == 200) {
+//                    Log.d(SETTING_SERVICE_TAG, "version: ${response.body()}")
+//
+//                    val intent = getPermissionIntentResult()
+//                    startActivity(intent)
+//                    finish()
+//                }
+//            }
+//
+//            override fun onFailure(call: Call<Int>, throwable: Throwable) {
+//                Log.d(SETTING_SERVICE_TAG, throwable.message.toString())
+//            }
+//
+//        })
 
         settingsUtil.getSettings(object : Callback<ISettings> {
             override fun onResponse(call: Call<ISettings>, response: Response<ISettings>) {
                 if (response.code() == 200) {
                     Log.d(SETTING_SERVICE_TAG, response.body().toString())
+
+                    val intent = getPermissionIntentResult()
+                    startActivity(intent)
+                    finish()
                 }
             }
 
@@ -58,21 +86,9 @@ class SplashActivity : AppCompatActivity() {
         })
     }
 
-    private fun runWaitingTimer() {
+    private fun showNoConnectionActivityAfterAWhile() {
         Handler(Looper.getMainLooper()).postDelayed({
-            val intent: Intent
-            if (NetworkUtil.isNetworkAvailable(this@SplashActivity)) {
-                if (!PermissionUtil.isGrantedPermissions(this@SplashActivity)) {
-                    // do not grant permission yet
-                    intent = Intent(this@SplashActivity, RequestPermissionActivity::class.java)
-                } else {
-                    // granted permission
-                    intent = Intent(this@SplashActivity, MainActivity::class.java)
-                }
-            } else {
-                intent = Intent(this@SplashActivity, NoConnectionActivity::class.java)
-            }
-
+            val intent = Intent(this@SplashActivity, NoConnectionActivity::class.java)
             startActivity(intent)
             finish()
         }, SPLASH_SCREEN_TIME)

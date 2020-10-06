@@ -17,6 +17,15 @@ class SettingsUtil {
         private lateinit var mSettingsService: SettingsService
     }
 
+    /**
+     * Return settings version
+     *
+     * Debug 99999999
+     * Release year month day
+     *
+     * @callback onResponse
+     * @callback onFailure
+     */
     fun getSettingVersion(callback: Callback<Int>) {
         mSettingsService.getVersion(getCurrentSettingType()).enqueue(object : Callback<Int> {
             override fun onResponse(call: Call<Int>, response: Response<Int>) {
@@ -29,6 +38,12 @@ class SettingsUtil {
         })
     }
 
+    /**
+     * Return all settings
+     *
+     * @callback onResponse
+     * @callback onFailure
+     */
     fun getSettings(callback: Callback<ISettings>) {
         mSettingsService.getAll(getCurrentSettingType()).enqueue(object : Callback<ISettings> {
             override fun onResponse(call: Call<ISettings>, response: Response<ISettings>) {
@@ -41,6 +56,12 @@ class SettingsUtil {
         })
     }
 
+    /**
+     * Return type of current settings
+     * Debug or Release
+     *
+     * @return settings type
+     */
     private fun getCurrentSettingType(): String {
         return if (isDebugVersion) DEBUG_SETTINGS else RELEASE_SETTINGS
     }
