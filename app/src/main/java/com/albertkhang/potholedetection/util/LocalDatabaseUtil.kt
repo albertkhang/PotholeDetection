@@ -3,7 +3,7 @@ package com.albertkhang.potholedetection.util
 import com.albertkhang.potholedetection.model.ISettings
 import io.paperdb.Paper
 
-class DatabaseUtil {
+class LocalDatabaseUtil {
     companion object {
         const val SETTINGS_BOOK = "settings-book"
 

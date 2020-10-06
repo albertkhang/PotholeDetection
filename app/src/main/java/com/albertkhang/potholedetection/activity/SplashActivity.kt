@@ -10,7 +10,7 @@ import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.service.SettingsService.Companion.SETTING_SERVICE_TAG
 import com.albertkhang.potholedetection.model.ISettings
 import com.albertkhang.potholedetection.service.SettingsService.Companion.isLogAll
-import com.albertkhang.potholedetection.util.DatabaseUtil
+import com.albertkhang.potholedetection.util.LocalDatabaseUtil
 import com.albertkhang.potholedetection.util.NetworkUtil
 import com.albertkhang.potholedetection.util.PermissionUtil
 import com.albertkhang.potholedetection.util.SettingsUtil
@@ -64,13 +64,13 @@ class SplashActivity : AppCompatActivity() {
 
                     if (newSettings != null) {
                         if (SettingsUtil.isDebugVersion) {
-                            DatabaseUtil.writeSettings(newSettings)
+                            LocalDatabaseUtil.writeSettings(newSettings)
                         } else {
-                            val currentSettings = DatabaseUtil.readSettings()
+                            val currentSettings = LocalDatabaseUtil.readSettings()
 
                             if (currentSettings != null) {
                                 if (newSettings.version > currentSettings.version) {
-                                    DatabaseUtil.writeSettings(newSettings)
+                                    LocalDatabaseUtil.writeSettings(newSettings)
                                     logAllSettings("Updated new settings.")
                                 } else {
                                     logAllSettings("Settings have no change.")
