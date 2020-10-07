@@ -13,9 +13,9 @@ class ISettings {
     var sensorDelay: Int = 0
 
     @SerializedName("location")
-    var location: ILocationSetting = ILocationSetting(0, 0)
+    var location: ILocationSetting = ILocationSetting()
 
     override fun toString(): String {
-        return "ISettings(version=$version, mapZoom=$mapZoom, sensorDelay=$sensorDelay, location=$location)"
+        return "ISettings(version=$version, mapZoom=$mapZoom, sensorDelay=$sensorDelay, minMeterUpdate=${location.minMeterUpdate}, minMillisecondsUpdate=${location.minMillisecondsUpdate})"
     }
 }

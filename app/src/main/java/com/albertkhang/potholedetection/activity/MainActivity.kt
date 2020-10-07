@@ -22,11 +22,13 @@ import com.albertkhang.potholedetection.broadcast.NetworkChangeReceiver
 import com.albertkhang.potholedetection.model.database.IAGVector
 import com.albertkhang.potholedetection.model.database.IDatabase
 import com.albertkhang.potholedetection.model.IVector3D
-import com.albertkhang.potholedetection.model.database.IGps
+import com.albertkhang.potholedetection.model.database.ILocation
+import com.albertkhang.potholedetection.model.settings.ISettings
 import com.albertkhang.potholedetection.sensor.AccelerometerSensor
 import com.albertkhang.potholedetection.sensor.LocationSensor
 import com.albertkhang.potholedetection.util.CloudDatabaseUtil
 import com.albertkhang.potholedetection.util.DisplayUtil
+import com.albertkhang.potholedetection.util.LocalDatabaseUtil
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -49,6 +51,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private var mLegendView: View? = null
     private lateinit var mPreparingMapProgress: View
 
+    private lateinit var mLocalDatabaseUtil: LocalDatabaseUtil
     private lateinit var mCloudDatabaseUtil: CloudDatabaseUtil
 
     private lateinit var mNetworkChangeReceiver: NetworkChangeReceiver
@@ -58,7 +61,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     companion object {
         val agVectorDb = IAGVector()
-        val locationDb = IGps()
+        val locationDb = ILocation()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,7 +71,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         addControl()
         addEvent()
 
-        readAll()
+//        readAll()
 
         mAccelerometerSensor = object : AccelerometerSensor(this@MainActivity) {
             override fun onUpdate(accelerometer: IVector3D?, gravity: IVector3D?) {
@@ -103,9 +106,23 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         btnAddSensor.setOnClickListener {
-            writeData(agVectorDb)
-            writeData(locationDb)
+//            writeData(agVectorDb)
+//            writeData(locationDb)
+
+            LocalDatabaseUtil.write(LocalDatabaseUtil.AG_VECTOR_BOOK, agVectorDb)
+            LocalDatabaseUtil.write(LocalDatabaseUtil.LOCATION_BOOK, locationDb)
         }
+
+        val ag: List<IAGVector> =
+            LocalDatabaseUtil.readAll(LocalDatabaseUtil.AG_VECTOR_BOOK) as List<IAGVector>
+        val locate: List<ILocation> =
+            LocalDatabaseUtil.readAll(LocalDatabaseUtil.LOCATION_BOOK) as List<ILocation>
+
+        val setting = LocalDatabaseUtil.readSettings()
+
+        Log.d(TAG, "ag: ${ag.size}")
+        Log.d(TAG, "location: ${locate.size}")
+        Log.d(TAG, "setting: $setting")
     }
 
     private fun writeData(data: IDatabase) {
@@ -134,7 +151,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         mCloudDatabaseUtil.readAll(
-            CloudDatabaseUtil.COLLECTION_GPS
+            CloudDatabaseUtil.COLLECTION_LOCATION
         ) { task ->
             if (task.isSuccessful) {
                 for (document in task.result) {
@@ -237,6 +254,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         (map as SupportMapFragment).getMapAsync(this)
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
+        mLocalDatabaseUtil = LocalDatabaseUtil()
         mCloudDatabaseUtil = CloudDatabaseUtil()
     }
 

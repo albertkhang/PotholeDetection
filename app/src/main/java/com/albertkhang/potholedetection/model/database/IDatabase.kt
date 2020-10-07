@@ -9,4 +9,8 @@ abstract class IDatabase {
      * @unit milliseconds
      */
     var timestamps: Long = 0
+
+    init {
+
+    }
 }

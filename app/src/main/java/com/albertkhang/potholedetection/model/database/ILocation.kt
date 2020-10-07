@@ -2,7 +2,7 @@ package com.albertkhang.potholedetection.model.database
 
 import com.google.android.gms.maps.model.LatLng
 
-class IGps : IDatabase() {
+class ILocation : IDatabase() {
     companion object {
         const val PROVIDER_PASSIVE = "passive"
         const val PROVIDER_GPS = "gps"

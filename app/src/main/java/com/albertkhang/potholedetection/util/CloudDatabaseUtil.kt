@@ -2,7 +2,7 @@ package com.albertkhang.potholedetection.util
 
 import com.albertkhang.potholedetection.model.database.IAGVector
 import com.albertkhang.potholedetection.model.database.IDatabase
-import com.albertkhang.potholedetection.model.database.IGps
+import com.albertkhang.potholedetection.model.database.ILocation
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
@@ -16,7 +16,7 @@ class CloudDatabaseUtil {
 
     companion object {
         const val COLLECTION_AG_VECTOR = "ag-vector"
-        const val COLLECTION_GPS = "gps"
+        const val COLLECTION_LOCATION = "location"
     }
 
     fun write(data: IDatabase, onCompleteListener: OnCompleteListener<DocumentReference>) {
@@ -29,8 +29,8 @@ class CloudDatabaseUtil {
                     }
             }
 
-            is IGps -> {
-                db.collection(COLLECTION_GPS)
+            is ILocation -> {
+                db.collection(COLLECTION_LOCATION)
                     .add(data)
                     .addOnCompleteListener {
                         onCompleteListener.onComplete(it)
@@ -51,8 +51,8 @@ class CloudDatabaseUtil {
                     }
             }
 
-            COLLECTION_GPS -> {
-                db.collection(COLLECTION_GPS)
+            COLLECTION_LOCATION -> {
+                db.collection(COLLECTION_LOCATION)
                     .get()
                     .addOnCompleteListener {
                         onCompleteListener.onComplete(it)
