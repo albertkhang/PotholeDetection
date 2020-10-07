@@ -3,6 +3,7 @@ package com.albertkhang.potholedetection.activity
 import android.animation.Animator
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
@@ -31,6 +32,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_main.*
 
 @SuppressLint("MissingPermission")
@@ -44,6 +46,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private var mLegendView: View? = null
     private lateinit var mPreparingMapProgress: View
+
+    private lateinit var mCloudDatabase: CloudDatabase
 
     private lateinit var mNetworkChangeReceiver: NetworkChangeReceiver
 
@@ -83,8 +87,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun writeData(data: IDatabase) {
-        val cloudDatabase = CloudDatabase()
-        cloudDatabase.write(data) { documentReference ->
+        mCloudDatabase.write(data) { documentReference ->
             if (documentReference.isComplete) {
                 Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference.result.id}")
                 Toast.makeText(this@MainActivity, "Add Success", Toast.LENGTH_SHORT).show()
@@ -96,8 +99,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun readAll() {
-        val cloudDatabase = CloudDatabase()
-        cloudDatabase.readAll(
+        mCloudDatabase.readAll(
             CloudDatabase.COLLECTION_AG_VECTOR
         ) { task ->
             if (task.isSuccessful) {
@@ -109,7 +111,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
 
-        cloudDatabase.readAll(
+        mCloudDatabase.readAll(
             CloudDatabase.COLLECTION_GPS
         ) { task ->
             if (task.isSuccessful) {
@@ -212,20 +214,27 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         (map as SupportMapFragment).getMapAsync(this)
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        mCloudDatabase = CloudDatabase()
     }
 
     private fun initNetworkChangeListener() {
-        // TODO: show offline notice
-
+        val snackbar = Snackbar.make(root_view, "", Snackbar.LENGTH_INDEFINITE)
         mNetworkChangeReceiver = NetworkChangeReceiver()
         mNetworkChangeReceiver.setOnNetworkChangeListener(object :
             NetworkChangeReceiver.OnNetworkChangeListener {
             override fun onNetworkOn() {
-                Toast.makeText(this@MainActivity, "You are online!", Toast.LENGTH_SHORT).show()
+                if (snackbar.isShown) {
+                    snackbar.setText("Đã kết nối lại kết nối.")
+                    snackbar.setTextColor(Color.parseColor("#2ECC71"))
+                    snackbar.setDuration(Snackbar.LENGTH_SHORT).show()
+                }
             }
 
             override fun onNetworkOff() {
-                Toast.makeText(this@MainActivity, "You are offline!", Toast.LENGTH_SHORT).show()
+                snackbar.setText("Mất kết nối.")
+                snackbar.setTextColor(Color.parseColor("#E74C3C"))
+                snackbar.setDuration(Snackbar.LENGTH_INDEFINITE).show()
             }
         })
     }
