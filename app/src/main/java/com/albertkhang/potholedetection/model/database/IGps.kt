@@ -1,4 +1,4 @@
-package com.albertkhang.potholedetection.model
+package com.albertkhang.potholedetection.model.database
 
 import com.google.android.gms.maps.model.LatLng
 
@@ -29,7 +29,7 @@ class IGps : IDatabase() {
     /**
      * @unit meter
      */
-    var altitude: Float = 0.0f
+    var altitude: Double = 0.0
 
     /**
      * @unit m/s

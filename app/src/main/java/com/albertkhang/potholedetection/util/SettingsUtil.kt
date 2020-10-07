@@ -1,7 +1,7 @@
 package com.albertkhang.potholedetection.util
 
 import com.albertkhang.potholedetection.service.SettingsService
-import com.albertkhang.potholedetection.model.ISettings
+import com.albertkhang.potholedetection.model.settings.ISettings
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response

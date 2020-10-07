@@ -1,4 +1,4 @@
-package com.albertkhang.potholedetection.model
+package com.albertkhang.potholedetection.model.database
 
 abstract class IDatabase {
 //    var userId: Int = userId
@@ -8,5 +8,5 @@ abstract class IDatabase {
      *
      * @unit milliseconds
      */
-    var timestamps: Long = System.currentTimeMillis()
+    var timestamps: Long = 0
 }

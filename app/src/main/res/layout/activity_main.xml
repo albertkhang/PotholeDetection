@@ -39,10 +39,10 @@
         android:src="@drawable/ic_legend" />
 
     <Button
-        android:id="@+id/btnAddAGSensor"
+        android:id="@+id/btnAddSensor"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="add AG Sensor"
+        android:text="add Sensor"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="35dp"/>

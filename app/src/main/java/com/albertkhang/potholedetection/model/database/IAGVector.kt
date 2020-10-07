@@ -1,4 +1,6 @@
-package com.albertkhang.potholedetection.model
+package com.albertkhang.potholedetection.model.database
+
+import com.albertkhang.potholedetection.model.database.IDatabase
 
 class IAGVector : IDatabase() {
     /**

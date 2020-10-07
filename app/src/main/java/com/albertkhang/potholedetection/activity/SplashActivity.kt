@@ -8,7 +8,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.service.SettingsService.Companion.SETTING_SERVICE_TAG
-import com.albertkhang.potholedetection.model.ISettings
+import com.albertkhang.potholedetection.model.settings.ISettings
 import com.albertkhang.potholedetection.service.SettingsService.Companion.isLogAll
 import com.albertkhang.potholedetection.util.LocalDatabaseUtil
 import com.albertkhang.potholedetection.util.NetworkUtil

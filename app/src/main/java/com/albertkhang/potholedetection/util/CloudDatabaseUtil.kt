@@ -1,8 +1,8 @@
 package com.albertkhang.potholedetection.util
 
-import com.albertkhang.potholedetection.model.IAGVector
-import com.albertkhang.potholedetection.model.IDatabase
-import com.albertkhang.potholedetection.model.IGps
+import com.albertkhang.potholedetection.model.database.IAGVector
+import com.albertkhang.potholedetection.model.database.IDatabase
+import com.albertkhang.potholedetection.model.database.IGps
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
@@ -10,7 +10,7 @@ import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
-class CloudDatabase {
+class CloudDatabaseUtil {
     private val TAG = "CloudDatabase"
     val db: FirebaseFirestore = Firebase.firestore
 

@@ -2,10 +2,10 @@ package com.albertkhang.potholedetection.activity
 
 import android.animation.Animator
 import android.annotation.SuppressLint
-import android.content.Context
 import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
+import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -19,11 +19,13 @@ import androidx.core.content.ContextCompat
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.animation.AlphaAnimation
 import com.albertkhang.potholedetection.broadcast.NetworkChangeReceiver
-import com.albertkhang.potholedetection.model.IAGVector
-import com.albertkhang.potholedetection.model.IDatabase
+import com.albertkhang.potholedetection.model.database.IAGVector
+import com.albertkhang.potholedetection.model.database.IDatabase
 import com.albertkhang.potholedetection.model.IVector3D
+import com.albertkhang.potholedetection.model.database.IGps
 import com.albertkhang.potholedetection.sensor.AccelerometerSensor
-import com.albertkhang.potholedetection.util.CloudDatabase
+import com.albertkhang.potholedetection.sensor.LocationSensor
+import com.albertkhang.potholedetection.util.CloudDatabaseUtil
 import com.albertkhang.potholedetection.util.DisplayUtil
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -47,14 +49,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private var mLegendView: View? = null
     private lateinit var mPreparingMapProgress: View
 
-    private lateinit var mCloudDatabase: CloudDatabase
+    private lateinit var mCloudDatabaseUtil: CloudDatabaseUtil
 
     private lateinit var mNetworkChangeReceiver: NetworkChangeReceiver
 
     private lateinit var mAccelerometerSensor: AccelerometerSensor
+    private lateinit var mLocationSensor: LocationSensor
 
     companion object {
-        val agVector = IAGVector()
+        val agVectorDb = IAGVector()
+        val locationDb = IGps()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,25 +73,43 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mAccelerometerSensor = object : AccelerometerSensor(this@MainActivity) {
             override fun onUpdate(accelerometer: IVector3D?, gravity: IVector3D?) {
                 if (accelerometer != null && gravity != null) {
-                    agVector.ax = accelerometer.x
-                    agVector.ay = accelerometer.y
-                    agVector.az = accelerometer.z
+                    agVectorDb.timestamps = System.currentTimeMillis()
 
-                    agVector.gx = gravity.x
-                    agVector.gy = gravity.y
-                    agVector.gz = gravity.z
+                    agVectorDb.ax = accelerometer.x
+                    agVectorDb.ay = accelerometer.y
+                    agVectorDb.az = accelerometer.z
+
+                    agVectorDb.gx = gravity.x
+                    agVectorDb.gy = gravity.y
+                    agVectorDb.gz = gravity.z
                 }
             }
 
         }
 
-        btnAddAGSensor.setOnClickListener {
-            writeData(agVector)
+        mLocationSensor = object : LocationSensor(this@MainActivity) {
+            override fun onUpdate(location: Location?) {
+                if (location !== null) {
+                    locationDb.timestamps = System.currentTimeMillis()
+
+                    locationDb.provider = location.provider
+                    locationDb.latLng = LatLng(location.latitude, location.longitude)
+                    locationDb.accuracy = location.accuracy
+                    locationDb.altitude = location.altitude
+                    locationDb.speed = location.speed
+                }
+            }
+
+        }
+
+        btnAddSensor.setOnClickListener {
+            writeData(agVectorDb)
+            writeData(locationDb)
         }
     }
 
     private fun writeData(data: IDatabase) {
-        mCloudDatabase.write(data) { documentReference ->
+        mCloudDatabaseUtil.write(data) { documentReference ->
             if (documentReference.isComplete) {
                 Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference.result.id}")
                 Toast.makeText(this@MainActivity, "Add Success", Toast.LENGTH_SHORT).show()
@@ -99,8 +121,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun readAll() {
-        mCloudDatabase.readAll(
-            CloudDatabase.COLLECTION_AG_VECTOR
+        mCloudDatabaseUtil.readAll(
+            CloudDatabaseUtil.COLLECTION_AG_VECTOR
         ) { task ->
             if (task.isSuccessful) {
                 for (document in task.result) {
@@ -111,8 +133,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
 
-        mCloudDatabase.readAll(
-            CloudDatabase.COLLECTION_GPS
+        mCloudDatabaseUtil.readAll(
+            CloudDatabaseUtil.COLLECTION_GPS
         ) { task ->
             if (task.isSuccessful) {
                 for (document in task.result) {
@@ -215,7 +237,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         (map as SupportMapFragment).getMapAsync(this)
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        mCloudDatabase = CloudDatabase()
+        mCloudDatabaseUtil = CloudDatabaseUtil()
     }
 
     private fun initNetworkChangeListener() {
@@ -281,11 +303,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         super.onResume()
         mNetworkChangeReceiver.register(this)
         mAccelerometerSensor.start()
+        mLocationSensor.start()
     }
 
     override fun onStop() {
         super.onStop()
         mNetworkChangeReceiver.unregister(this)
         mAccelerometerSensor.stop()
+        mLocationSensor.stop()
     }
 }

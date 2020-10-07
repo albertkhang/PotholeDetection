@@ -7,10 +7,11 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import com.albertkhang.potholedetection.model.IVector3D
 
-abstract class AccelerometerSensor(context: Context) : SensorEventListener {
+abstract class AccelerometerSensor(context: Context) : SensorEventListener, BaseSensor {
     private var mAccelerometerSensor: Sensor
     private val mGravitySensor: Sensor
-    private var mSensorManager: SensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+    private var mSensorManager: SensorManager =
+        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private var mAccelerometerVector: IVector3D? = null
     private var mGravityVector: IVector3D? = null
 
