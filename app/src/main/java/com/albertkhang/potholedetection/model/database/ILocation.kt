@@ -1,8 +1,9 @@
 package com.albertkhang.potholedetection.model.database
 
+import android.location.Location
 import com.google.android.gms.maps.model.LatLng
 
-class ILocation : IDatabase() {
+class ILocation(location: Location) : IDatabase() {
     companion object {
         const val PROVIDER_PASSIVE = "passive"
         const val PROVIDER_GPS = "gps"
@@ -14,25 +15,25 @@ class ILocation : IDatabase() {
      *
      * @unit passive | gps | network
      */
-    var provider: String = ""
+    var provider: String = location.provider
 
     /**
      * contain latitude and longitude
      */
-    var latLng: LatLng = LatLng(0.0, 0.0)
+    var latLng: LatLng = LatLng(location.latitude, location.longitude)
 
     /**
      * @unit meter
      */
-    var accuracy: Float = 0.0f
+    var accuracy: Float = location.accuracy
 
     /**
      * @unit meter
      */
-    var altitude: Double = 0.0
+    var altitude: Double = location.altitude
 
     /**
      * @unit m/s
      */
-    var speed: Float = 0.0f
+    var speed: Float = location.speed
 }

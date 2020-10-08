@@ -23,7 +23,6 @@ import com.albertkhang.potholedetection.model.database.IAGVector
 import com.albertkhang.potholedetection.model.database.IDatabase
 import com.albertkhang.potholedetection.model.IVector3D
 import com.albertkhang.potholedetection.model.database.ILocation
-import com.albertkhang.potholedetection.model.settings.ISettings
 import com.albertkhang.potholedetection.sensor.AccelerometerSensor
 import com.albertkhang.potholedetection.sensor.LocationSensor
 import com.albertkhang.potholedetection.util.CloudDatabaseUtil
@@ -52,18 +51,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private var mLegendView: View? = null
     private lateinit var mPreparingMapProgress: View
 
-    private lateinit var mLocalDatabaseUtil: LocalDatabaseUtil
     private lateinit var mCloudDatabaseUtil: CloudDatabaseUtil
 
     private lateinit var mNetworkChangeReceiver: NetworkChangeReceiver
 
     private lateinit var mAccelerometerSensor: AccelerometerSensor
     private lateinit var mLocationSensor: LocationSensor
-
-    companion object {
-        val agVectorDb = IAGVector()
-        val locationDb = ILocation()
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,15 +71,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mAccelerometerSensor = object : AccelerometerSensor(this@MainActivity) {
             override fun onUpdate(accelerometer: IVector3D?, gravity: IVector3D?) {
                 if (accelerometer != null && gravity != null) {
-                    agVectorDb.timestamps = System.currentTimeMillis()
+                    val data = IAGVector(accelerometer, gravity)
+                    data.timestamps = System.currentTimeMillis()
 
-                    agVectorDb.ax = accelerometer.x
-                    agVectorDb.ay = accelerometer.y
-                    agVectorDb.az = accelerometer.z
-
-                    agVectorDb.gx = gravity.x
-                    agVectorDb.gy = gravity.y
-                    agVectorDb.gz = gravity.z
+//                    LocalDatabaseUtil.add(LocalDatabaseUtil.AG_VECTOR_BOOK, data)
                 }
             }
 
@@ -95,13 +83,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mLocationSensor = object : LocationSensor(this@MainActivity) {
             override fun onUpdate(location: Location?) {
                 if (location !== null) {
-                    locationDb.timestamps = System.currentTimeMillis()
+                    val data = ILocation(location)
+                    data.timestamps = System.currentTimeMillis()
 
-                    locationDb.provider = location.provider
-                    locationDb.latLng = LatLng(location.latitude, location.longitude)
-                    locationDb.accuracy = location.accuracy
-                    locationDb.altitude = location.altitude
-                    locationDb.speed = location.speed
+//                    LocalDatabaseUtil.add(LocalDatabaseUtil.LOCATION_BOOK, data)
                 }
             }
 
@@ -111,16 +96,34 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 //            writeData(agVectorDb)
 //            writeData(locationDb)
 
-            LocalDatabaseUtil.write(LocalDatabaseUtil.AG_VECTOR_BOOK, agVectorDb)
-            LocalDatabaseUtil.write(LocalDatabaseUtil.LOCATION_BOOK, locationDb)
-            val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+//            LocalDatabaseUtil.add(LocalDatabaseUtil.AG_VECTOR_BOOK, agVectorDb)
+//            LocalDatabaseUtil.add(LocalDatabaseUtil.LOCATION_BOOK, locationDb)
+//            val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+//
+//            val agDatas = LocalDatabaseUtil.readData(LocalDatabaseUtil.AG_VECTOR_BOOK, hour)
+//            val locationDatas = LocalDatabaseUtil.readData(LocalDatabaseUtil.LOCATION_BOOK, hour)
+//
+//            Log.d(TAG, "agData size: ${agDatas!!.size}")
+//            Log.d(TAG, "locationData: ${locationDatas!!.size}")
 
-            val agDatas = LocalDatabaseUtil.readDatas(LocalDatabaseUtil.AG_VECTOR_BOOK, hour)
-            val locationDatas = LocalDatabaseUtil.readDatas(LocalDatabaseUtil.LOCATION_BOOK, hour)
-
-            Log.d(TAG, "agData size: ${agDatas!!.size}")
-            Log.d(TAG, "locationDatas: ${locationDatas!!.size}")
+//            LocalDatabaseUtil.filter(Calendar.getInstance().get(Calendar.HOUR_OF_DAY))
         }
+
+//        btnAddSensor.setOnLongClickListener {
+//            LocalDatabaseUtil.deleteData(
+//                LocalDatabaseUtil.AG_VECTOR_BOOK,
+//                Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+//            )
+//
+//            LocalDatabaseUtil.deleteData(
+//                LocalDatabaseUtil.LOCATION_BOOK,
+//                Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+//            )
+//
+//            Toast.makeText(this@MainActivity, "Deleted", Toast.LENGTH_SHORT).show()
+//
+//            true
+//        }
     }
 
     private fun writeData(data: IDatabase) {
@@ -252,7 +255,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         (map as SupportMapFragment).getMapAsync(this)
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        mLocalDatabaseUtil = LocalDatabaseUtil()
         mCloudDatabaseUtil = CloudDatabaseUtil()
     }
 

@@ -19,13 +19,13 @@ class CloudDatabaseUtil {
         const val COLLECTION_LOCATION = "location"
     }
 
-    fun write(data: IDatabase, onCompleteListener: OnCompleteListener<DocumentReference>) {
+    fun write(data: IDatabase, onCompleteListener: OnCompleteListener<DocumentReference>?) {
         when (data) {
             is IAGVector -> {
                 db.collection(COLLECTION_AG_VECTOR)
                     .add(data)
                     .addOnCompleteListener {
-                        onCompleteListener.onComplete(it)
+                        onCompleteListener?.onComplete(it)
                     }
             }
 
@@ -33,7 +33,7 @@ class CloudDatabaseUtil {
                 db.collection(COLLECTION_LOCATION)
                     .add(data)
                     .addOnCompleteListener {
-                        onCompleteListener.onComplete(it)
+                        onCompleteListener?.onComplete(it)
                     }
             }
 
