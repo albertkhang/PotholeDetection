@@ -86,8 +86,7 @@ class LocalDatabaseUtil {
         }
 
         fun add(bookName: String, data: IDatabase) {
-            val currentHour =
-                Calendar.getInstance().get(Calendar.HOUR_OF_DAY) // 24 hours
+            val currentHour = 13
 
             when (bookName) {
                 AG_VECTOR_BOOK -> {

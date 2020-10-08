@@ -56,9 +56,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mNetworkChangeReceiver: NetworkChangeReceiver
 
-    private lateinit var mAccelerometerSensor: AccelerometerSensor
-    private lateinit var mLocationSensor: LocationSensor
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -68,30 +65,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         // read all data from cloud db
 //        readAll()
-
-        mAccelerometerSensor = object : AccelerometerSensor(this@MainActivity) {
-            override fun onUpdate(accelerometer: IVector3D?, gravity: IVector3D?) {
-                if (accelerometer != null && gravity != null) {
-                    val data = IAGVector(accelerometer, gravity)
-                    data.timestamps = System.currentTimeMillis()
-
-//                    LocalDatabaseUtil.add(LocalDatabaseUtil.AG_VECTOR_BOOK, data)
-                }
-            }
-
-        }
-
-        mLocationSensor = object : LocationSensor(this@MainActivity) {
-            override fun onUpdate(location: Location?) {
-                if (location !== null) {
-                    val data = ILocation(location)
-                    data.timestamps = System.currentTimeMillis()
-
-//                    LocalDatabaseUtil.add(LocalDatabaseUtil.LOCATION_BOOK, data)
-                }
-            }
-
-        }
 
         btnAddSensor.setOnClickListener {
 //            writeData(agVectorDb)
@@ -110,10 +83,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 //            LocalDatabaseUtil.filter(Calendar.getInstance().get(Calendar.HOUR_OF_DAY))
 
             if (!DetectingNotification.isStarted) {
-                DetectingNotification.startService(this)
+                DetectingNotification.startService()
                 Toast.makeText(this, "started", Toast.LENGTH_SHORT).show()
             } else {
-                DetectingNotification.stopService(this)
+                DetectingNotification.stopService()
                 Toast.makeText(this, "stopped", Toast.LENGTH_SHORT).show()
             }
         }
@@ -265,6 +238,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         mCloudDatabaseUtil = CloudDatabaseUtil()
+        DetectingNotification.init(this)
     }
 
     private fun initNetworkChangeListener() {
@@ -312,7 +286,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mFusedLocationClient.lastLocation.addOnSuccessListener {
             val current = LatLng(it.latitude, it.longitude)
             mMap.moveCamera(CameraUpdateFactory.newLatLng(current))
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, MAP_ZOOM!!.toFloat()))
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, MAP_ZOOM.toFloat()))
         }
     }
 
@@ -329,14 +303,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onResume() {
         super.onResume()
         mNetworkChangeReceiver.register(this)
-        mAccelerometerSensor.start()
-        mLocationSensor.start()
     }
 
     override fun onStop() {
         super.onStop()
         mNetworkChangeReceiver.unregister(this)
-        mAccelerometerSensor.stop()
-        mLocationSensor.stop()
     }
 }

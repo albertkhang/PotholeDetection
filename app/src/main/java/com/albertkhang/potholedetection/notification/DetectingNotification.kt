@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.location.Location
 import android.os.Build
 import android.os.CountDownTimer
 import android.os.IBinder
@@ -14,6 +15,11 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.activity.MainActivity
+import com.albertkhang.potholedetection.model.IVector3D
+import com.albertkhang.potholedetection.model.database.IAGVector
+import com.albertkhang.potholedetection.model.database.ILocation
+import com.albertkhang.potholedetection.sensor.AccelerometerSensor
+import com.albertkhang.potholedetection.sensor.LocationSensor
 import com.albertkhang.potholedetection.util.LocalDatabaseUtil
 import com.albertkhang.potholedetection.util.SettingsUtil
 
@@ -22,31 +28,75 @@ class DetectingNotification : Service() {
 
     companion object {
         private const val TAG = "DetectingNotification"
+        private lateinit var mContext: Context
+
+        private lateinit var mAccelerometerSensor: AccelerometerSensor
+        private lateinit var mLocationSensor: LocationSensor
 
         /**
          * Current this foreground service status
          */
         var isStarted = false
 
-        fun startService(context: Context) {
-            val startIntent = Intent(context, DetectingNotification::class.java)
-            ContextCompat.startForegroundService(context, startIntent)
+        fun init(context: Context) {
+            mContext = context
+            initSensors()
+        }
 
-            doInBackground()
+        private fun initSensors() {
+            mAccelerometerSensor =
+                object : AccelerometerSensor(mContext) {
+                    override fun onUpdate(accelerometer: IVector3D?, gravity: IVector3D?) {
+                        if (accelerometer != null && gravity != null) {
+                            val data = IAGVector(accelerometer, gravity)
+                            data.timestamps = System.currentTimeMillis()
+
+                            LocalDatabaseUtil.add(LocalDatabaseUtil.AG_VECTOR_BOOK, data)
+                        }
+                    }
+
+                }
+
+            mLocationSensor = object : LocationSensor(mContext) {
+                override fun onUpdate(location: Location?) {
+                    if (location !== null) {
+                        val data = ILocation(location)
+                        data.timestamps = System.currentTimeMillis()
+
+                        LocalDatabaseUtil.add(LocalDatabaseUtil.LOCATION_BOOK, data)
+                    }
+                }
+
+            }
+        }
+
+        fun startService() {
+            val startIntent = Intent(mContext, DetectingNotification::class.java)
+            ContextCompat.startForegroundService(mContext, startIntent)
 
             isStarted = true
+            mAccelerometerSensor.start()
+            mLocationSensor.start()
+
+            doInBackground()
         }
 
-        fun stopService(context: Context) {
-            val stopIntent = Intent(context, DetectingNotification::class.java)
-            context.stopService(stopIntent)
+        fun stopService() {
+            val stopIntent = Intent(mContext, DetectingNotification::class.java)
+            mContext.stopService(stopIntent)
 
             isStarted = false
+            mAccelerometerSensor.stop()
+            mLocationSensor.stop()
+
+            timer.cancel()
         }
+
+        private lateinit var timer: CountDownTimer
 
         private fun doInBackground() {
             var count = 0
-            val timer = object : CountDownTimer(10000, 1000) {
+            timer = object : CountDownTimer(10000, 1000) {
                 override fun onTick(millisUntilFinished: Long) {
                     Log.d(TAG, (++count).toString())
                 }
