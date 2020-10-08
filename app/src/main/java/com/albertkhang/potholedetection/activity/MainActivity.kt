@@ -5,7 +5,6 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
-import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -19,13 +18,8 @@ import androidx.core.content.ContextCompat
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.animation.AlphaAnimation
 import com.albertkhang.potholedetection.broadcast.NetworkChangeReceiver
-import com.albertkhang.potholedetection.model.database.IAGVector
 import com.albertkhang.potholedetection.model.database.IDatabase
-import com.albertkhang.potholedetection.model.IVector3D
-import com.albertkhang.potholedetection.model.database.ILocation
 import com.albertkhang.potholedetection.notification.DetectingNotification
-import com.albertkhang.potholedetection.sensor.AccelerometerSensor
-import com.albertkhang.potholedetection.sensor.LocationSensor
 import com.albertkhang.potholedetection.util.CloudDatabaseUtil
 import com.albertkhang.potholedetection.util.DisplayUtil
 import com.albertkhang.potholedetection.util.LocalDatabaseUtil
@@ -38,7 +32,6 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_main.*
-import java.util.*
 
 @SuppressLint("MissingPermission")
 // Checked permissions before go to this activity
@@ -67,33 +60,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 //        readAll()
 
         btnAddSensor.setOnClickListener {
-//            writeData(agVectorDb)
-//            writeData(locationDb)
-
-//            LocalDatabaseUtil.add(LocalDatabaseUtil.AG_VECTOR_BOOK, agVectorDb)
-//            LocalDatabaseUtil.add(LocalDatabaseUtil.LOCATION_BOOK, locationDb)
-//            val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-//
-//            val agDatas = LocalDatabaseUtil.readData(LocalDatabaseUtil.AG_VECTOR_BOOK, hour)
-//            val locationDatas = LocalDatabaseUtil.readData(LocalDatabaseUtil.LOCATION_BOOK, hour)
-//
-//            Log.d(TAG, "agData size: ${agDatas!!.size}")
-//            Log.d(TAG, "locationData: ${locationDatas!!.size}")
-
-//            LocalDatabaseUtil.filter(Calendar.getInstance().get(Calendar.HOUR_OF_DAY))
-
             if (!DetectingNotification.isStarted) {
-                DetectingNotification.startService()
+                DetectingNotification.startService(this)
                 Toast.makeText(this, "started", Toast.LENGTH_SHORT).show()
             } else {
-                DetectingNotification.stopService()
+                DetectingNotification.stopService(this)
                 Toast.makeText(this, "stopped", Toast.LENGTH_SHORT).show()
             }
         }
 
         btnAddSensor.setOnLongClickListener {
-//            deleteLocalData()
-
             Log.d(
                 TAG,
                 "ag size: ${
@@ -116,6 +92,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
             true
         }
+
+        btnMyLocation.setOnLongClickListener {
+            deleteLocalData()
+            Toast.makeText(this@MainActivity, "Deleted", Toast.LENGTH_SHORT).show()
+
+            true
+        }
     }
 
     private fun deleteLocalData() {
@@ -128,8 +111,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             LocalDatabaseUtil.LOCATION_BOOK,
             13
         )
-
-        Toast.makeText(this@MainActivity, "Deleted", Toast.LENGTH_SHORT).show()
     }
 
     private fun writeData(data: IDatabase) {
@@ -262,7 +243,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         mCloudDatabaseUtil = CloudDatabaseUtil()
-        DetectingNotification.init(this)
     }
 
     private fun initNetworkChangeListener() {

@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.Build
-import android.os.CountDownTimer
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -21,68 +20,68 @@ import com.albertkhang.potholedetection.model.database.ILocation
 import com.albertkhang.potholedetection.sensor.AccelerometerSensor
 import com.albertkhang.potholedetection.sensor.LocationSensor
 import com.albertkhang.potholedetection.util.LocalDatabaseUtil
-import com.albertkhang.potholedetection.util.SettingsUtil
 
 class DetectingNotification : Service() {
-    private val CHANNEL_ID = "DetectingNotificationId"
-
     companion object {
-        private const val TAG = "DetectingNotification"
-        private const val isLogSensors = true
+        private val CHANNEL_ID = "DetectingNotificationId"
+        private val TAG = "DetectingNotification"
+        private const val isLogData = false
 
+        private val minLocalWriteIRI =
+            LocalDatabaseUtil.readSettings()!!.detectNotification.minLocalWriteIRI
 
-        private lateinit var mContext: Context
+        private val minLocalWriteSpeed =
+            LocalDatabaseUtil.readSettings()!!.detectNotification.minLocalWriteSpeed
+
+        /**
+         * Using for check the notification is starting or stopping
+         */
+        var isStarted = false
 
         private lateinit var mAccelerometerSensor: AccelerometerSensor
         private lateinit var mLocationSensor: LocationSensor
 
-        /**
-         * Current this foreground service status
-         */
-        var isStarted = false
-
-        fun init(context: Context) {
-            mContext = context
-            initSensors()
-        }
-
-        private fun initSensors() {
+        private fun initSensors(context: Context) {
             mAccelerometerSensor =
-                object : AccelerometerSensor(mContext) {
+                object : AccelerometerSensor(context) {
                     override fun onUpdate(accelerometer: IVector3D?, gravity: IVector3D?) {
                         if (accelerometer != null && gravity != null) {
                             val data = IAGVector(accelerometer, gravity)
                             data.timestamps = System.currentTimeMillis()
 
-                            LocalDatabaseUtil.add(LocalDatabaseUtil.AG_VECTOR_BOOK, data)
-
-                            if (isLogSensors) {
-                                val iri =
-                                    IVector3D(data.ax, data.ay, data.az).project(
-                                        IVector3D(
-                                            data.gx,
-                                            data.gy,
-                                            data.gz
-                                        )
+                            val iri =
+                                IVector3D(data.ax, data.ay, data.az).project(
+                                    IVector3D(
+                                        data.gx,
+                                        data.gy,
+                                        data.gz
                                     )
+                                )
 
-                                Log.d(TAG, "iri $iri")
+                            if (iri > minLocalWriteIRI) {
+                                LocalDatabaseUtil.add(LocalDatabaseUtil.AG_VECTOR_BOOK, data)
+
+                                if (isLogData) {
+                                    Log.i(TAG, "iri $iri added")
+                                }
                             }
                         }
                     }
 
                 }
 
-            mLocationSensor = object : LocationSensor(mContext) {
+            mLocationSensor = object : LocationSensor(context) {
                 override fun onUpdate(location: Location?) {
                     if (location !== null) {
                         val data = ILocation(location)
                         data.timestamps = System.currentTimeMillis()
 
-                        LocalDatabaseUtil.add(LocalDatabaseUtil.LOCATION_BOOK, data)
+                        if (location.speed >= minLocalWriteSpeed) {
+                            LocalDatabaseUtil.add(LocalDatabaseUtil.LOCATION_BOOK, data)
 
-                        if (isLogSensors) {
-                            Log.d(TAG, "location $data")
+                            if (isLogData) {
+                                Log.i(TAG, "location $data added")
+                            }
                         }
                     }
                 }
@@ -90,67 +89,51 @@ class DetectingNotification : Service() {
             }
         }
 
-        fun startService() {
-            val startIntent = Intent(mContext, DetectingNotification::class.java)
-            ContextCompat.startForegroundService(mContext, startIntent)
-
-            isStarted = true
+        fun startService(context: Context) {
+            val startIntent = Intent(context, DetectingNotification::class.java)
+            ContextCompat.startForegroundService(context, startIntent)
+            initSensors(context)
             mAccelerometerSensor.start()
             mLocationSensor.start()
-
-            doInBackground()
+            isStarted = true
         }
 
-        fun stopService() {
-            val stopIntent = Intent(mContext, DetectingNotification::class.java)
-            mContext.stopService(stopIntent)
-
-            isStarted = false
+        fun stopService(context: Context) {
+            val stopIntent = Intent(context, DetectingNotification::class.java)
+            context.stopService(stopIntent)
             mAccelerometerSensor.stop()
             mLocationSensor.stop()
-
-//            timer.cancel()
-        }
-
-//        private lateinit var timer: CountDownTimer
-
-        private fun doInBackground() {
-//            var count = 0
-//            timer = object : CountDownTimer(10000, 1000) {
-//                override fun onTick(millisUntilFinished: Long) {
-//                    Log.d(TAG, (++count).toString())
-//                }
-//
-//                override fun onFinish() {
-//                    Log.d(TAG, "Count done!")
-//                }
-//            }
-//            timer.start()
+            isStarted = false
         }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // do heavy work on a background thread
         createNotificationChannel()
+        initAndStartNotification()
 
+        // TODO: Có thể xử lý filter data trong này
+
+        //stopSelf();
+        return START_NOT_STICKY
+    }
+
+    private fun initAndStartNotification() {
         val notificationIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
             this,
             0, notificationIntent, 0
         )
 
-        val contentTitle = LocalDatabaseUtil.readSettings()?.detectNotification?.contentTitle
-        val contentText = LocalDatabaseUtil.readSettings()?.detectNotification?.contentText
-
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID).apply {
-            setContentTitle(contentTitle)
-            setContentText(contentText)
-            setSmallIcon(R.drawable.ic_my_location)
-            setContentIntent(pendingIntent)
-        }.build()
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle(LocalDatabaseUtil.readSettings()?.detectNotification?.contentTitle)
+            .setContentText(LocalDatabaseUtil.readSettings()?.detectNotification?.contentText)
+            .setSmallIcon(R.drawable.ic_my_location)
+            .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
+            .setContentIntent(pendingIntent)
+            .build()
 
         startForeground(1, notification)
-
-        return START_NOT_STICKY
     }
 
     override fun onBind(intent: Intent): IBinder? {
@@ -160,11 +143,16 @@ class DetectingNotification : Service() {
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val serviceChannel = NotificationChannel(
-                CHANNEL_ID, "Pothole Detection Notification",
-                NotificationManager.IMPORTANCE_DEFAULT
-            )
-            val manager = getSystemService(NotificationManager::class.java)
-            manager!!.createNotificationChannel(serviceChannel)
+                CHANNEL_ID, "Foreground Service Channel",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Foreground Service Description"
+                setShowBadge(false)
+            }
+
+            val notificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(serviceChannel)
         }
     }
 }

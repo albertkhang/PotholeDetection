@@ -85,6 +85,8 @@ class LocalDatabaseUtil {
             }
         }
 
+        private var agTemp: LinkedList<IDatabase>? = null
+
         fun add(bookName: String, data: IDatabase) {
             val currentHour = 13
 
@@ -98,7 +100,7 @@ class LocalDatabaseUtil {
                     newdatas.add(data)
 
                     Paper.book(bookName).write(currentHour.toString(), newdatas.toList())
-                    Log.d(TAG, data.toString())
+//                    Log.d(TAG, data.toString())
                 }
                 LOCATION_BOOK -> {
                     val newdatas: ArrayList<IDatabase> = ArrayList()
@@ -109,7 +111,7 @@ class LocalDatabaseUtil {
                     newdatas.add(data)
 
                     Paper.book(bookName).write(currentHour.toString(), newdatas.toList())
-                    Log.d(TAG, data.toString())
+//                    Log.d(TAG, data.toString())
                 }
                 else -> throw Exception("Write to local database false.")
             }
