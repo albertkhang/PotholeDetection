@@ -23,6 +23,7 @@ import com.albertkhang.potholedetection.notification.DetectingNotification
 import com.albertkhang.potholedetection.util.CloudDatabaseUtil
 import com.albertkhang.potholedetection.util.DisplayUtil
 import com.albertkhang.potholedetection.util.LocalDatabaseUtil
+import com.albertkhang.potholedetection.util.SettingsUtil
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -94,10 +95,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         btnMyLocation.setOnLongClickListener {
-            deleteLocalData()
-            Toast.makeText(this@MainActivity, "Deleted", Toast.LENGTH_SHORT).show()
+            if (SettingsUtil.isDebugVersion) {
+                deleteLocalData()
+                Toast.makeText(this@MainActivity, "Deleted", Toast.LENGTH_SHORT).show()
+            }
 
-            true
+            false
         }
     }
 

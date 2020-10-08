@@ -21,7 +21,6 @@ abstract class AccelerometerSensor(context: Context) : SensorEventListener, Base
         private var y = 0f
         private var z = 0f
 
-        // SensorManager.SENSOR_DELAY_UI
         private val SENSOR_DELAY=LocalDatabaseUtil.readSettings()!!.sensorDelay
     }
 

@@ -20,6 +20,7 @@ import com.albertkhang.potholedetection.model.database.ILocation
 import com.albertkhang.potholedetection.sensor.AccelerometerSensor
 import com.albertkhang.potholedetection.sensor.LocationSensor
 import com.albertkhang.potholedetection.util.LocalDatabaseUtil
+import java.text.DecimalFormat
 
 class DetectingNotification : Service() {
     companion object {
@@ -41,6 +42,8 @@ class DetectingNotification : Service() {
         private lateinit var mAccelerometerSensor: AccelerometerSensor
         private lateinit var mLocationSensor: LocationSensor
 
+        private val decimalFormat = DecimalFormat(LocalDatabaseUtil.readSettings()!!.iriFormat)
+
         private fun initSensors(context: Context) {
             mAccelerometerSensor =
                 object : AccelerometerSensor(context) {
@@ -49,21 +52,15 @@ class DetectingNotification : Service() {
                             val data = IAGVector(accelerometer, gravity)
                             data.timestamps = System.currentTimeMillis()
 
-                            val iri =
-                                IVector3D(data.ax, data.ay, data.az).project(
-                                    IVector3D(
-                                        data.gx,
-                                        data.gy,
-                                        data.gz
-                                    )
-                                )
+                            val iri: Float =
+                                decimalFormat.format(accelerometer.iri(gravity)).toFloat()
 
                             if (iri > minLocalWriteIRI) {
                                 LocalDatabaseUtil.add(LocalDatabaseUtil.AG_VECTOR_BOOK, data)
 
-                                if (isLogData) {
-                                    Log.i(TAG, "iri $iri added")
-                                }
+//                                if (isLogData) {
+//                                    Log.i(TAG, "iri $iri added")
+//                                }
                             }
                         }
                     }
@@ -79,9 +76,9 @@ class DetectingNotification : Service() {
                         if (location.speed >= minLocalWriteSpeed) {
                             LocalDatabaseUtil.add(LocalDatabaseUtil.LOCATION_BOOK, data)
 
-                            if (isLogData) {
-                                Log.i(TAG, "location $data added")
-                            }
+//                            if (isLogData) {
+//                                Log.i(TAG, "location $data added")
+//                            }
                         }
                     }
                 }

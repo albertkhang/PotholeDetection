@@ -10,7 +10,7 @@ class ISettings {
     var mapZoom: Int = 0
 
     @SerializedName("sensor_delay")
-    var sensorDelay: Int = 0
+    var sensorDelay: Int = 3
 
     @SerializedName("location")
     var location: ILocationSetting = ILocationSetting()
@@ -23,4 +23,7 @@ class ISettings {
 
     @SerializedName("detect_notification")
     var detectNotification: DetectNotificationSetting = DetectNotificationSetting()
+
+    @SerializedName("iri_format")
+    var iriFormat: String = "#.##"
 }
