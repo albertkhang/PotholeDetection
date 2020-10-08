@@ -28,6 +28,9 @@ class DetectingNotification : Service() {
 
     companion object {
         private const val TAG = "DetectingNotification"
+        private const val isLogSensors = true
+
+
         private lateinit var mContext: Context
 
         private lateinit var mAccelerometerSensor: AccelerometerSensor
@@ -52,6 +55,19 @@ class DetectingNotification : Service() {
                             data.timestamps = System.currentTimeMillis()
 
                             LocalDatabaseUtil.add(LocalDatabaseUtil.AG_VECTOR_BOOK, data)
+
+                            if (isLogSensors) {
+                                val iri =
+                                    IVector3D(data.ax, data.ay, data.az).project(
+                                        IVector3D(
+                                            data.gx,
+                                            data.gy,
+                                            data.gz
+                                        )
+                                    )
+
+                                Log.d(TAG, "iri $iri")
+                            }
                         }
                     }
 
@@ -64,6 +80,10 @@ class DetectingNotification : Service() {
                         data.timestamps = System.currentTimeMillis()
 
                         LocalDatabaseUtil.add(LocalDatabaseUtil.LOCATION_BOOK, data)
+
+                        if (isLogSensors) {
+                            Log.d(TAG, "location $data")
+                        }
                     }
                 }
 
@@ -89,23 +109,23 @@ class DetectingNotification : Service() {
             mAccelerometerSensor.stop()
             mLocationSensor.stop()
 
-            timer.cancel()
+//            timer.cancel()
         }
 
-        private lateinit var timer: CountDownTimer
+//        private lateinit var timer: CountDownTimer
 
         private fun doInBackground() {
-            var count = 0
-            timer = object : CountDownTimer(10000, 1000) {
-                override fun onTick(millisUntilFinished: Long) {
-                    Log.d(TAG, (++count).toString())
-                }
-
-                override fun onFinish() {
-                    Log.d(TAG, "Count done!")
-                }
-            }
-            timer.start()
+//            var count = 0
+//            timer = object : CountDownTimer(10000, 1000) {
+//                override fun onTick(millisUntilFinished: Long) {
+//                    Log.d(TAG, (++count).toString())
+//                }
+//
+//                override fun onFinish() {
+//                    Log.d(TAG, "Count done!")
+//                }
+//            }
+//            timer.start()
         }
     }
 

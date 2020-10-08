@@ -91,21 +91,45 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
 
-//        btnAddSensor.setOnLongClickListener {
-//            LocalDatabaseUtil.deleteData(
-//                LocalDatabaseUtil.AG_VECTOR_BOOK,
-//                Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-//            )
-//
-//            LocalDatabaseUtil.deleteData(
-//                LocalDatabaseUtil.LOCATION_BOOK,
-//                Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-//            )
-//
-//            Toast.makeText(this@MainActivity, "Deleted", Toast.LENGTH_SHORT).show()
-//
-//            true
-//        }
+        btnAddSensor.setOnLongClickListener {
+//            deleteLocalData()
+
+            Log.d(
+                TAG,
+                "ag size: ${
+                    LocalDatabaseUtil.readData(
+                        LocalDatabaseUtil.AG_VECTOR_BOOK,
+                        13
+                    )?.size
+                }"
+            )
+
+            Log.d(
+                TAG,
+                "location size: ${
+                    LocalDatabaseUtil.readData(
+                        LocalDatabaseUtil.LOCATION_BOOK,
+                        13
+                    )?.size
+                }"
+            )
+
+            true
+        }
+    }
+
+    private fun deleteLocalData() {
+        LocalDatabaseUtil.deleteData(
+            LocalDatabaseUtil.AG_VECTOR_BOOK,
+            13
+        )
+
+        LocalDatabaseUtil.deleteData(
+            LocalDatabaseUtil.LOCATION_BOOK,
+            13
+        )
+
+        Toast.makeText(this@MainActivity, "Deleted", Toast.LENGTH_SHORT).show()
     }
 
     private fun writeData(data: IDatabase) {
