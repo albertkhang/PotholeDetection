@@ -9,6 +9,7 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
 import androidx.core.app.ActivityCompat
+import com.albertkhang.potholedetection.util.LocalDatabaseUtil
 
 abstract class LocationSensor(context: Context) : LocationListener, BaseSensor {
     private var locationManager: LocationManager =
@@ -23,14 +24,15 @@ abstract class LocationSensor(context: Context) : LocationListener, BaseSensor {
          *
          * @Unit millisecond
          */
-        private const val MIN_TIME_BETWEEN_UPDATES: Long = 1000
+        private val MIN_MILLISECOND_UPDATES =
+            LocalDatabaseUtil.readSettings()!!.location.minMillisecondsUpdate
 
         /**
          * Minimum Time Update
          *
          * @Unit meter
          */
-        private const val MIN_DIST_BETWEEN_UPDATES = 1f
+        private val MIN_METER_UPDATES = LocalDatabaseUtil.readSettings()!!.location.minMeterUpdate
     }
 
     fun start() {
@@ -54,23 +56,23 @@ abstract class LocationSensor(context: Context) : LocationListener, BaseSensor {
             // This provider determines location using GNSS satellites
             locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
-                MIN_TIME_BETWEEN_UPDATES,
-                MIN_DIST_BETWEEN_UPDATES, this
+                MIN_MILLISECOND_UPDATES.toLong(),
+                MIN_METER_UPDATES.toFloat(), this
             )
 
             // This provider determines location based on nearby of cell tower and WiFi access points.
             // Results are retrieved by means of a network lookup.
             locationManager.requestLocationUpdates(
                 LocationManager.NETWORK_PROVIDER,
-                MIN_TIME_BETWEEN_UPDATES,
-                MIN_DIST_BETWEEN_UPDATES, this
+                MIN_MILLISECOND_UPDATES.toLong(),
+                MIN_METER_UPDATES.toFloat(), this
             )
 
             // A special location provider for receiving locations without actually initiating a location fix.
             locationManager.requestLocationUpdates(
                 LocationManager.PASSIVE_PROVIDER,
-                MIN_TIME_BETWEEN_UPDATES,
-                MIN_DIST_BETWEEN_UPDATES, this
+                MIN_MILLISECOND_UPDATES.toLong(),
+                MIN_METER_UPDATES.toFloat(), this
             )
         }
     }

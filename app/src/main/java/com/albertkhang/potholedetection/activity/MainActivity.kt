@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
-    private val MAP_ZOOM = 16f
+    private val MAP_ZOOM = LocalDatabaseUtil.readSettings()!!.mapZoom
 
     private var mLegendView: View? = null
     private lateinit var mPreparingMapProgress: View
@@ -303,7 +303,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mFusedLocationClient.lastLocation.addOnSuccessListener {
             val current = LatLng(it.latitude, it.longitude)
             mMap.moveCamera(CameraUpdateFactory.newLatLng(current))
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, MAP_ZOOM))
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, MAP_ZOOM!!.toFloat()))
         }
     }
 

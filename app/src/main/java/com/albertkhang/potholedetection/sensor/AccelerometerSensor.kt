@@ -6,6 +6,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import com.albertkhang.potholedetection.model.IVector3D
+import com.albertkhang.potholedetection.util.LocalDatabaseUtil
 
 abstract class AccelerometerSensor(context: Context) : SensorEventListener, BaseSensor {
     private var mAccelerometerSensor: Sensor
@@ -19,6 +20,9 @@ abstract class AccelerometerSensor(context: Context) : SensorEventListener, Base
         private var x = 0f
         private var y = 0f
         private var z = 0f
+
+        // SensorManager.SENSOR_DELAY_UI
+        private val SENSOR_DELAY=LocalDatabaseUtil.readSettings()!!.sensorDelay
     }
 
     init {
@@ -27,8 +31,8 @@ abstract class AccelerometerSensor(context: Context) : SensorEventListener, Base
     }
 
     fun start() {
-        mSensorManager.registerListener(this, mAccelerometerSensor, SensorManager.SENSOR_DELAY_UI)
-        mSensorManager.registerListener(this, mGravitySensor, SensorManager.SENSOR_DELAY_UI)
+        mSensorManager.registerListener(this, mAccelerometerSensor, SENSOR_DELAY)
+        mSensorManager.registerListener(this, mGravitySensor, SENSOR_DELAY)
     }
 
     fun stop() {
