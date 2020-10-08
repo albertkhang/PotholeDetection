@@ -21,7 +21,6 @@ class ISettings {
     @SerializedName("raw_data_filter_interval")
     var rawDataFilterInterval: Int = 1000 * 60 * 60 // hour
 
-    override fun toString(): String {
-        return "ISettings(version=$version, mapZoom=$mapZoom, sensorDelay=$sensorDelay, minMeterUpdate=${location.minMeterUpdate}, minMillisecondsUpdate=${location.minMillisecondsUpdate}, rawDataFilterInterval=$rawDataFilterInterval)"
-    }
+    @SerializedName("detect_notification")
+    var detectNotification: DetectNotificationSetting = DetectNotificationSetting()
 }

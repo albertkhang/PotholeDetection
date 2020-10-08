@@ -30,6 +30,8 @@ class LocalDatabaseUtil {
         }
 
         fun filter(hour: Int) {
+            // TODO: Cứ mỗi 1h là tự update, không quan tâm hiện tại là mấy giờ
+
             val agData: List<IAGVector>? = readData(AG_VECTOR_BOOK, hour) as List<IAGVector>?
             val locationData: List<ILocation>? = readData(LOCATION_BOOK, hour) as List<ILocation>?
 

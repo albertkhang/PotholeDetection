@@ -23,6 +23,7 @@ import com.albertkhang.potholedetection.model.database.IAGVector
 import com.albertkhang.potholedetection.model.database.IDatabase
 import com.albertkhang.potholedetection.model.IVector3D
 import com.albertkhang.potholedetection.model.database.ILocation
+import com.albertkhang.potholedetection.notification.DetectingNotification
 import com.albertkhang.potholedetection.sensor.AccelerometerSensor
 import com.albertkhang.potholedetection.sensor.LocationSensor
 import com.albertkhang.potholedetection.util.CloudDatabaseUtil
@@ -107,6 +108,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 //            Log.d(TAG, "locationData: ${locationDatas!!.size}")
 
 //            LocalDatabaseUtil.filter(Calendar.getInstance().get(Calendar.HOUR_OF_DAY))
+
+            if (!DetectingNotification.isStarted) {
+                DetectingNotification.startService(this)
+                Toast.makeText(this, "started", Toast.LENGTH_SHORT).show()
+            } else {
+                DetectingNotification.stopService(this)
+                Toast.makeText(this, "stopped", Toast.LENGTH_SHORT).show()
+            }
         }
 
 //        btnAddSensor.setOnLongClickListener {
