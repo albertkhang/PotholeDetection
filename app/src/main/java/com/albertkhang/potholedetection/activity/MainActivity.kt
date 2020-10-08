@@ -38,6 +38,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_main.*
+import java.util.*
 
 @SuppressLint("MissingPermission")
 // Checked permissions before go to this activity
@@ -71,6 +72,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         addControl()
         addEvent()
 
+        // read all data from cloud db
 //        readAll()
 
         mAccelerometerSensor = object : AccelerometerSensor(this@MainActivity) {
@@ -111,18 +113,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
             LocalDatabaseUtil.write(LocalDatabaseUtil.AG_VECTOR_BOOK, agVectorDb)
             LocalDatabaseUtil.write(LocalDatabaseUtil.LOCATION_BOOK, locationDb)
+            val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+
+            val agDatas = LocalDatabaseUtil.readDatas(LocalDatabaseUtil.AG_VECTOR_BOOK, hour)
+            val locationDatas = LocalDatabaseUtil.readDatas(LocalDatabaseUtil.LOCATION_BOOK, hour)
+
+            Log.d(TAG, "agData size: ${agDatas!!.size}")
+            Log.d(TAG, "locationDatas: ${locationDatas!!.size}")
         }
-
-        val ag: List<IAGVector> =
-            LocalDatabaseUtil.readAll(LocalDatabaseUtil.AG_VECTOR_BOOK) as List<IAGVector>
-        val locate: List<ILocation> =
-            LocalDatabaseUtil.readAll(LocalDatabaseUtil.LOCATION_BOOK) as List<ILocation>
-
-        val setting = LocalDatabaseUtil.readSettings()
-
-        Log.d(TAG, "ag: ${ag.size}")
-        Log.d(TAG, "location: ${locate.size}")
-        Log.d(TAG, "setting: $setting")
     }
 
     private fun writeData(data: IDatabase) {

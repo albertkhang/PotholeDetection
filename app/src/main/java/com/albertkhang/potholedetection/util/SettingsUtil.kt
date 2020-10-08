@@ -15,6 +15,7 @@ class SettingsUtil {
         private const val DEBUG_SETTINGS: String = "debug-settings"
         private const val RELEASE_SETTINGS: String = "release-settings"
         private lateinit var mSettingsService: SettingsService
+        private val RAW_DATA_FILTER_INTERVAL = LocalDatabaseUtil.readSettings()!!.rawDataFilterInterval
     }
 
     /**
