@@ -7,7 +7,7 @@ class ISettings {
     var version: Int = 0
 
     @SerializedName("map_zoom")
-    var mapZoom: Int = 0
+    var mapZoom: Int = 16
 
     @SerializedName("sensor_delay")
     var sensorDelay: Int = 3

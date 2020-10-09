@@ -63,10 +63,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         btnAddSensor.setOnClickListener {
             if (!DetectingNotification.isStarted) {
                 DetectingNotification.startService(this)
-                Toast.makeText(this, "started", Toast.LENGTH_SHORT).show()
             } else {
                 DetectingNotification.stopService(this)
-                Toast.makeText(this, "stopped", Toast.LENGTH_SHORT).show()
             }
         }
 

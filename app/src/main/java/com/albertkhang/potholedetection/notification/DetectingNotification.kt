@@ -24,9 +24,9 @@ import java.text.DecimalFormat
 
 class DetectingNotification : Service() {
     companion object {
-        private val CHANNEL_ID = "DetectingNotificationId"
-        private val TAG = "DetectingNotification"
-        private const val isLogData = false
+        private const val CHANNEL_ID = "DetectingNotificationId"
+        private const val TAG = "DetectingNotification"
+        private const val isLogData = true
 
         private val minLocalWriteIRI =
             LocalDatabaseUtil.readSettings()!!.detectNotification.minLocalWriteIRI
@@ -56,11 +56,16 @@ class DetectingNotification : Service() {
                                 decimalFormat.format(accelerometer.iri(gravity)).toFloat()
 
                             if (iri > minLocalWriteIRI) {
-                                LocalDatabaseUtil.add(LocalDatabaseUtil.AG_VECTOR_BOOK, data)
+                                // TODO: save to file
+//                                LocalDatabaseUtil.add(LocalDatabaseUtil.AG_VECTOR_BOOK, data)
 
 //                                if (isLogData) {
 //                                    Log.i(TAG, "iri $iri added")
 //                                }
+                            }
+
+                            if (isLogData) {
+                                Log.i(TAG, "iri $iri")
                             }
                         }
                     }
@@ -74,11 +79,16 @@ class DetectingNotification : Service() {
                         data.timestamps = System.currentTimeMillis()
 
                         if (location.speed >= minLocalWriteSpeed) {
-                            LocalDatabaseUtil.add(LocalDatabaseUtil.LOCATION_BOOK, data)
+                            // TODO: save to file
+//                            LocalDatabaseUtil.add(LocalDatabaseUtil.LOCATION_BOOK, data)
 
 //                            if (isLogData) {
 //                                Log.i(TAG, "location $data added")
 //                            }
+                        }
+
+                        if (isLogData) {
+                            Log.i(TAG, "location $data")
                         }
                     }
                 }
@@ -123,11 +133,13 @@ class DetectingNotification : Service() {
         )
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle(LocalDatabaseUtil.readSettings()?.detectNotification?.contentTitle)
-            .setContentText(LocalDatabaseUtil.readSettings()?.detectNotification?.contentText)
-            .setSmallIcon(R.drawable.ic_my_location)
-            .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
-            .setContentIntent(pendingIntent)
+            .apply {
+                setContentTitle(LocalDatabaseUtil.readSettings()?.detectNotification?.contentTitle)
+                setContentText(LocalDatabaseUtil.readSettings()?.detectNotification?.contentText)
+                setSmallIcon(R.drawable.ic_my_location)
+                setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
+                setContentIntent(pendingIntent)
+            }
             .build()
 
         startForeground(1, notification)

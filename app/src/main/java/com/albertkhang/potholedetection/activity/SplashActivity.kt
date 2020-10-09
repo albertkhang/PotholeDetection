@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.service.SettingsService.Companion.SETTING_SERVICE_TAG
 import com.albertkhang.potholedetection.model.settings.ISettings
+import com.albertkhang.potholedetection.notification.DetectingNotification
 import com.albertkhang.potholedetection.service.SettingsService.Companion.isLogAll
 import com.albertkhang.potholedetection.util.LocalDatabaseUtil
 import com.albertkhang.potholedetection.util.NetworkUtil
@@ -24,6 +25,7 @@ class SplashActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
+
         checkConnection()
     }
 
@@ -32,20 +34,26 @@ class SplashActivity : AppCompatActivity() {
             getSettings()
         } else {
             showNoConnectionActivityAfterAWhile()
+            if (LocalDatabaseUtil.readSettings()?.version != 0) {
+                showDetectNotification()
+            }
+        }
+    }
+
+    private fun showDetectNotification() {
+        if (!DetectingNotification.isStarted) {
+            DetectingNotification.startService(this)
         }
     }
 
     private fun getPermissionIntentResult(): Intent {
-        val intent: Intent
-        if (!PermissionUtil.isGrantedPermissions(this@SplashActivity)) {
+        return if (!PermissionUtil.isGrantedPermissions(this@SplashActivity)) {
             // do not grant permission yet
-            intent = Intent(this@SplashActivity, RequestPermissionActivity::class.java)
+            Intent(this@SplashActivity, RequestPermissionActivity::class.java)
         } else {
             // granted permission
-            intent = Intent(this@SplashActivity, MainActivity::class.java)
+            Intent(this@SplashActivity, MainActivity::class.java)
         }
-
-        return intent
     }
 
     private fun logAllSettings(message: String) {
@@ -86,6 +94,8 @@ class SplashActivity : AppCompatActivity() {
                     val intent = getPermissionIntentResult()
                     startActivity(intent)
                     finish()
+
+                    showDetectNotification()
                 }
             }
 
