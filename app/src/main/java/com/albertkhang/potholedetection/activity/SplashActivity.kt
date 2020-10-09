@@ -63,6 +63,10 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun getSettings() {
+        if (DetectingNotification.isStarted) {
+            DetectingNotification.stopService(this@SplashActivity)
+        }
+
         val settingsUtil = SettingsUtil()
         settingsUtil.getSettings(object : Callback<ISettings> {
             override fun onResponse(call: Call<ISettings>, response: Response<ISettings>) {

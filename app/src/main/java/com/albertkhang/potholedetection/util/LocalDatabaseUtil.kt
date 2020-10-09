@@ -2,12 +2,10 @@ package com.albertkhang.potholedetection.util
 
 import android.content.Context
 import android.util.Log
-import com.albertkhang.potholedetection.model.IVector3D
 import com.albertkhang.potholedetection.model.database.IDatabase
-import com.albertkhang.potholedetection.model.database.ILocation
 import com.albertkhang.potholedetection.model.settings.ISettings
 import io.paperdb.Paper
-import java.text.DecimalFormat
+import java.text.SimpleDateFormat
 import java.util.*
 
 class LocalDatabaseUtil {
@@ -36,10 +34,14 @@ class LocalDatabaseUtil {
 
             val year = Calendar.getInstance().get(Calendar.YEAR)
             val month = Calendar.getInstance().get(Calendar.MONTH) + 1
-            val date = Calendar.getInstance().get(Calendar.DATE)
+            val day = Calendar.getInstance().get(Calendar.DATE)
             val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
 
-            Log.d(TAG, "$year$month${DecimalFormat("##").format(date)}$hour")
+            val parseFormat = SimpleDateFormat("yyyyMMdd HH:MM")
+            val s = parseFormat.format(Date())
+
+//            Log.d(TAG, "$year$month${DecimalFormat("##").format(day)}$hour")
+            Log.d(TAG, s)
         }
 
         fun writeSettings(settings: ISettings) {
@@ -82,7 +84,7 @@ class LocalDatabaseUtil {
         /**
          * Delete data in cache file
          */
-        fun delete(context: Context, fileName: String, hour: Int):Boolean {
+        fun delete(context: Context, fileName: String, hour: Int): Boolean {
             return FileUtil.delete(context, "${fileName}_$hour")
         }
     }

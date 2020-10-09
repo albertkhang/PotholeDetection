@@ -56,6 +56,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         // read all data from cloud db
 //        readAll()
+
+        LocalDatabaseUtil.filter()
     }
 
     private var deleteCount = 0
