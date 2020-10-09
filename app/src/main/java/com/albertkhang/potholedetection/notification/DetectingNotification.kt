@@ -6,12 +6,16 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.location.Location
 import android.os.Build
 import android.os.IBinder
+import android.service.autofill.CharSequenceTransformation
+import android.text.Spanned
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.core.text.HtmlCompat
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.activity.MainActivity
 import com.albertkhang.potholedetection.model.IVector3D
@@ -26,7 +30,10 @@ class DetectingNotification : Service() {
     companion object {
         private const val CHANNEL_ID = "DetectingNotificationId"
         private const val TAG = "DetectingNotification"
-        private const val isLogData = true
+        private const val isLogData = false
+
+        private const val ACTION_STOP_SERVICE =
+            "com.albertkhang.potholedetection.notification.stopservice"
 
         private val minLocalWriteIRI =
             LocalDatabaseUtil.readSettings()!!.detectNotification.minLocalWriteIRI
@@ -108,10 +115,15 @@ class DetectingNotification : Service() {
         fun stopService(context: Context) {
             val stopIntent = Intent(context, DetectingNotification::class.java)
             context.stopService(stopIntent)
-            mAccelerometerSensor.stop()
-            mLocationSensor.stop()
-            isStarted = false
         }
+    }
+
+    override fun onDestroy() {
+        mAccelerometerSensor.stop()
+        mLocationSensor.stop()
+        isStarted = false
+
+        super.onDestroy()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -121,16 +133,29 @@ class DetectingNotification : Service() {
 
         // TODO: Có thể xử lý filter data trong này
 
-        //stopSelf();
+        if (intent?.getStringExtra("action").equals(ACTION_STOP_SERVICE)) {
+            stopSelf()
+        }
+
         return START_NOT_STICKY
     }
 
     private fun initAndStartNotification() {
-        val notificationIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
             this,
-            0, notificationIntent, 0
+            0, Intent(this, MainActivity::class.java), 0
         )
+
+        val stopPendingIntent =
+            PendingIntent.getService(
+                this,
+                0,
+                Intent(this, DetectingNotification::class.java).putExtra(
+                    "action",
+                    ACTION_STOP_SERVICE
+                ),
+                0
+            )
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .apply {
@@ -139,6 +164,11 @@ class DetectingNotification : Service() {
                 setSmallIcon(R.drawable.ic_my_location)
                 setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
                 setContentIntent(pendingIntent)
+                addAction(R.color.colorWhite, LocalDatabaseUtil.readSettings()?.detectNotification?.contentStop, stopPendingIntent)
+                color = ContextCompat.getColor(
+                    this@DetectingNotification,
+                    R.color.colorNotificationStop
+                )
             }
             .build()
 

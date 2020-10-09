@@ -2,7 +2,6 @@ package com.albertkhang.potholedetection.activity
 
 import android.animation.Animator
 import android.annotation.SuppressLint
-import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
@@ -19,7 +18,6 @@ import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.animation.AlphaAnimation
 import com.albertkhang.potholedetection.broadcast.NetworkChangeReceiver
 import com.albertkhang.potholedetection.model.database.IDatabase
-import com.albertkhang.potholedetection.notification.DetectingNotification
 import com.albertkhang.potholedetection.util.CloudDatabaseUtil
 import com.albertkhang.potholedetection.util.DisplayUtil
 import com.albertkhang.potholedetection.util.LocalDatabaseUtil
@@ -59,48 +57,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         // read all data from cloud db
 //        readAll()
-
-        btnAddSensor.setOnClickListener {
-            if (!DetectingNotification.isStarted) {
-                DetectingNotification.startService(this)
-            } else {
-                DetectingNotification.stopService(this)
-            }
-        }
-
-        btnAddSensor.setOnLongClickListener {
-            Log.d(
-                TAG,
-                "ag size: ${
-                    LocalDatabaseUtil.readData(
-                        LocalDatabaseUtil.AG_VECTOR_BOOK,
-                        13
-                    )?.size
-                }"
-            )
-
-            Log.d(
-                TAG,
-                "location size: ${
-                    LocalDatabaseUtil.readData(
-                        LocalDatabaseUtil.LOCATION_BOOK,
-                        13
-                    )?.size
-                }"
-            )
-
-            true
-        }
-
-        btnMyLocation.setOnLongClickListener {
-            if (SettingsUtil.isDebugVersion) {
-                deleteLocalData()
-                Toast.makeText(this@MainActivity, "Deleted", Toast.LENGTH_SHORT).show()
-            }
-
-            false
-        }
     }
+
+    private var deleteCount = 0
 
     private fun deleteLocalData() {
         LocalDatabaseUtil.deleteData(
@@ -173,6 +132,46 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             root_view.addView(mLegendView, params)
             mLegendView!!.visibility = View.INVISIBLE
             btnLegend.isClickable = false
+            mLegendView!!.setOnClickListener {
+                // show data size added
+                if (SettingsUtil.isDebugVersion) {
+                    val agSize = LocalDatabaseUtil.readData(
+                        LocalDatabaseUtil.AG_VECTOR_BOOK,
+                        13
+                    )?.size
+
+                    val locationSize = LocalDatabaseUtil.readData(
+                        LocalDatabaseUtil.LOCATION_BOOK,
+                        13
+                    )?.size
+
+                    Toast.makeText(
+                        this@MainActivity,
+                        "ag added: $agSize, location added: $locationSize",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+
+            mLegendView!!.setOnLongClickListener {
+                if (SettingsUtil.isDebugVersion) {
+                    if (deleteCount == 2) {
+                        deleteLocalData()
+                        Toast.makeText(this@MainActivity, "Deleted", Toast.LENGTH_SHORT).show()
+                        deleteCount = 0
+                    } else {
+                        deleteCount++
+                        Toast.makeText(
+                            this@MainActivity,
+                            "deleteCount=$deleteCount",
+                            Toast.LENGTH_SHORT
+                        )
+                            .show()
+                    }
+                }
+
+                true
+            }
 
             AlphaAnimation.showViewAnimation(mLegendView, object : Animator.AnimatorListener {
                 override fun onAnimationStart(p0: Animator?) {
@@ -254,14 +253,24 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             override fun onNetworkOn() {
                 if (snackbar.isShown) {
                     snackbar.setText("Đã kết nối lại kết nối.")
-                    snackbar.setTextColor(Color.parseColor("#2ECC71"))
+                    snackbar.setTextColor(
+                        ContextCompat.getColor(
+                            this@MainActivity,
+                            R.color.colorConnected
+                        )
+                    )
                     snackbar.setDuration(Snackbar.LENGTH_SHORT).show()
                 }
             }
 
             override fun onNetworkOff() {
                 snackbar.setText("Mất kết nối.")
-                snackbar.setTextColor(Color.parseColor("#E74C3C"))
+                snackbar.setTextColor(
+                    ContextCompat.getColor(
+                        this@MainActivity,
+                        R.color.colorNoConnection
+                    )
+                )
                 snackbar.setDuration(Snackbar.LENGTH_INDEFINITE).show()
             }
         })

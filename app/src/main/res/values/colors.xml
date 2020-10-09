@@ -19,6 +19,8 @@
     <color name="colorAverageLegend">#F1C40F</color>
     <color name="colorBadLegend">#E74C3C</color>
 
-    <color name="colorNoConnection">#2ECC71</color>
-    <color name="colorConnected">#E74C3C</color>
+    <color name="colorConnected">#2ECC71</color>
+    <color name="colorNoConnection">#E74C3C</color>
+
+    <color name="colorNotificationStop">#2699FB</color>
 </resources>
