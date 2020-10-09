@@ -29,20 +29,20 @@ class LocalDatabaseUtil {
         // Filter level 2
         // TODO: chạy ở background thread
         //
-        fun filter() {
-            // TODO: Cứ mỗi 1h là tự update, không quan tâm hiện tại là mấy giờ
-
-            val year = Calendar.getInstance().get(Calendar.YEAR)
-            val month = Calendar.getInstance().get(Calendar.MONTH) + 1
-            val day = Calendar.getInstance().get(Calendar.DATE)
-            val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-
-            val parseFormat = SimpleDateFormat("yyyyMMdd HH:MM")
-            val s = parseFormat.format(Date())
-
-//            Log.d(TAG, "$year$month${DecimalFormat("##").format(day)}$hour")
-            Log.d(TAG, s)
-        }
+//        fun filter() {
+//            // TODO: Cứ mỗi 1h là tự update, không quan tâm hiện tại là mấy giờ
+//
+//            val year = Calendar.getInstance().get(Calendar.YEAR)
+//            val month = Calendar.getInstance().get(Calendar.MONTH) + 1
+//            val day = Calendar.getInstance().get(Calendar.DATE)
+//            val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+//
+//            val parseFormat = SimpleDateFormat("yyyyMMdd HH:MM")
+//            val s = parseFormat.format(Date())
+//
+////            Log.d(TAG, "$year$month${DecimalFormat("##").format(day)}$hour")
+//            Log.d(TAG, s)
+//        }
 
         fun writeSettings(settings: ISettings) {
             if (SettingsUtil.isDebugVersion) {

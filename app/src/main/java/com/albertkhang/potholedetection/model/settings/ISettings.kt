@@ -19,7 +19,7 @@ class ISettings {
      * @unit millisecond
      */
     @SerializedName("raw_data_filter_interval")
-    var rawDataFilterInterval: Int = 1000 * 60 * 60 // hour
+    var rawDataFilterInterval: Long = 1000 * 60 * 60 // hour
 
     @SerializedName("detect_notification")
     var detectNotification: DetectNotificationSetting = DetectNotificationSetting()

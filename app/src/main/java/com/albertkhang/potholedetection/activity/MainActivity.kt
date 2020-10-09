@@ -2,6 +2,7 @@ package com.albertkhang.potholedetection.activity
 
 import android.animation.Animator
 import android.annotation.SuppressLint
+import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
@@ -20,7 +21,10 @@ import com.albertkhang.potholedetection.broadcast.NetworkChangeReceiver
 import com.albertkhang.potholedetection.model.database.IAGVector
 import com.albertkhang.potholedetection.model.database.IDatabase
 import com.albertkhang.potholedetection.model.database.ILocation
-import com.albertkhang.potholedetection.util.*
+import com.albertkhang.potholedetection.util.CloudDatabaseUtil
+import com.albertkhang.potholedetection.util.DisplayUtil
+import com.albertkhang.potholedetection.util.LocalDatabaseUtil
+import com.albertkhang.potholedetection.util.SettingsUtil
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -28,6 +32,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -57,7 +62,20 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         // read all data from cloud db
 //        readAll()
 
-        LocalDatabaseUtil.filter()
+//        LocalDatabaseUtil.filter()
+    }
+
+    private fun addLines() {
+        mMap.addPolyline(
+                PolylineOptions()
+                    .add(
+                        LatLng(10.75797312,106.71605235), LatLng(10.75797312,106.71605235), LatLng(10.75826056,106.71571681),
+                        LatLng(10.75834856,106.71557039)
+                    ).width(16f).color(Color.BLUE)
+                    .geodesic(true)
+            )
+        // move camera to zoom on map
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(10.75797312,106.71605235), 16f))
     }
 
     private var deleteCount = 0
@@ -318,7 +336,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap = googleMap
         initGoogleMap()
         addPreparingMapProgress()
-        moveToMyLocation()
+//        moveToMyLocation()
+        addLines()
     }
 
     private fun moveToMyLocation() {
