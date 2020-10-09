@@ -38,7 +38,7 @@ class ILocation(location: Location) : IDatabase() {
     var speed: Float = location.speed
 
     override fun toString(): String {
-        return "ILocation(provider='$provider', latLng=$latLng, accuracy=$accuracy, altitude=$altitude, speed=$speed)"
+        return "ILocation(timestamps=$timestamps, provider='$provider', latLng=$latLng, accuracy=$accuracy, altitude=$altitude, speed=$speed)"
     }
 
 

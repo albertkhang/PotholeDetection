@@ -23,4 +23,9 @@ class IAGVector(accelerometer: IVector3D, gravity: IVector3D) : IDatabase() {
     var gx: Float = gravity.x
     var gy: Float = gravity.y
     var gz: Float = gravity.z
+    override fun toString(): String {
+        return "IAGVector(timestamps=$timestamps, ax=$ax, ay=$ay, az=$az, gx=$gx, gy=$gy, gz=$gz)"
+    }
+
+
 }

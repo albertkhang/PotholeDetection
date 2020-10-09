@@ -10,7 +10,5 @@ abstract class IDatabase {
      */
     var timestamps: Long = 0
 
-    init {
-
-    }
+    abstract override fun toString(): String
 }

@@ -6,16 +6,11 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.location.Location
 import android.os.Build
 import android.os.IBinder
-import android.service.autofill.CharSequenceTransformation
-import android.text.Spanned
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import androidx.core.text.HtmlCompat
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.activity.MainActivity
 import com.albertkhang.potholedetection.model.IVector3D
@@ -64,15 +59,15 @@ class DetectingNotification : Service() {
 
                             if (iri > minLocalWriteIRI) {
                                 // TODO: save to file
-//                                LocalDatabaseUtil.add(LocalDatabaseUtil.AG_VECTOR_BOOK, data)
+                                LocalDatabaseUtil.add(
+                                    context,
+                                    LocalDatabaseUtil.CACHE_AG_FILE_NAME,
+                                    data
+                                )
 
 //                                if (isLogData) {
 //                                    Log.i(TAG, "iri $iri added")
 //                                }
-                            }
-
-                            if (isLogData) {
-                                Log.i(TAG, "iri $iri")
                             }
                         }
                     }
@@ -87,15 +82,15 @@ class DetectingNotification : Service() {
 
                         if (location.speed >= minLocalWriteSpeed) {
                             // TODO: save to file
-//                            LocalDatabaseUtil.add(LocalDatabaseUtil.LOCATION_BOOK, data)
+                            LocalDatabaseUtil.add(
+                                context,
+                                LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME,
+                                data
+                            )
 
 //                            if (isLogData) {
 //                                Log.i(TAG, "location $data added")
 //                            }
-                        }
-
-                        if (isLogData) {
-                            Log.i(TAG, "location $data")
                         }
                     }
                 }
@@ -164,7 +159,11 @@ class DetectingNotification : Service() {
                 setSmallIcon(R.drawable.ic_my_location)
                 setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
                 setContentIntent(pendingIntent)
-                addAction(R.color.colorWhite, LocalDatabaseUtil.readSettings()?.detectNotification?.contentStop, stopPendingIntent)
+                addAction(
+                    R.color.colorWhite,
+                    LocalDatabaseUtil.readSettings()?.detectNotification?.contentStop,
+                    stopPendingIntent
+                )
                 color = ContextCompat.getColor(
                     this@DetectingNotification,
                     R.color.colorNotificationStop

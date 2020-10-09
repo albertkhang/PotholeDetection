@@ -17,11 +17,10 @@ import androidx.core.content.ContextCompat
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.animation.AlphaAnimation
 import com.albertkhang.potholedetection.broadcast.NetworkChangeReceiver
+import com.albertkhang.potholedetection.model.database.IAGVector
 import com.albertkhang.potholedetection.model.database.IDatabase
-import com.albertkhang.potholedetection.util.CloudDatabaseUtil
-import com.albertkhang.potholedetection.util.DisplayUtil
-import com.albertkhang.potholedetection.util.LocalDatabaseUtil
-import com.albertkhang.potholedetection.util.SettingsUtil
+import com.albertkhang.potholedetection.model.database.ILocation
+import com.albertkhang.potholedetection.util.*
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -62,15 +61,27 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private var deleteCount = 0
 
     private fun deleteLocalData() {
-        LocalDatabaseUtil.deleteData(
-            LocalDatabaseUtil.AG_VECTOR_BOOK,
-            13
-        )
+        if (LocalDatabaseUtil.delete(
+                this,
+                LocalDatabaseUtil.CACHE_AG_FILE_NAME,
+                13
+            )
+        ) {
+            Toast.makeText(this@MainActivity, "Deleted Success", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this@MainActivity, "Deleted False", Toast.LENGTH_SHORT).show()
+        }
 
-        LocalDatabaseUtil.deleteData(
-            LocalDatabaseUtil.LOCATION_BOOK,
-            13
-        )
+        if (LocalDatabaseUtil.delete(
+                this,
+                LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME,
+                13
+            )
+        ) {
+            Toast.makeText(this@MainActivity, "Deleted Success", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this@MainActivity, "Deleted False", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun writeData(data: IDatabase) {
@@ -135,21 +146,35 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             mLegendView!!.setOnClickListener {
                 // show data size added
                 if (SettingsUtil.isDebugVersion) {
-                    val agSize = LocalDatabaseUtil.readData(
-                        LocalDatabaseUtil.AG_VECTOR_BOOK,
-                        13
-                    )?.size
+                    val agDatas = LocalDatabaseUtil.read(
+                        this,
+                        LocalDatabaseUtil.CACHE_AG_FILE_NAME,
+                        13, LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME
+                    ) as List<IAGVector>
 
-                    val locationSize = LocalDatabaseUtil.readData(
-                        LocalDatabaseUtil.LOCATION_BOOK,
-                        13
-                    )?.size
+                    val locationDatas = LocalDatabaseUtil.read(
+                        this,
+                        LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME,
+                        13, LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME
+                    ) as List<ILocation>
 
                     Toast.makeText(
                         this@MainActivity,
-                        "ag added: $agSize, location added: $locationSize",
+                        "ag added: ${agDatas.size}, location added: ${locationDatas.size}",
                         Toast.LENGTH_SHORT
                     ).show()
+
+                    if (agDatas.isNotEmpty()) {
+                        agDatas.forEach {
+                            Log.d(TAG, it.toString())
+                        }
+                    }
+
+                    if (locationDatas.isNotEmpty()) {
+                        locationDatas.forEach {
+                            Log.d(TAG, it.toString())
+                        }
+                    }
                 }
             }
 
@@ -157,7 +182,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 if (SettingsUtil.isDebugVersion) {
                     if (deleteCount == 2) {
                         deleteLocalData()
-                        Toast.makeText(this@MainActivity, "Deleted", Toast.LENGTH_SHORT).show()
                         deleteCount = 0
                     } else {
                         deleteCount++
