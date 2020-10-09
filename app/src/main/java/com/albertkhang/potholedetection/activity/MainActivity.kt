@@ -143,13 +143,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             root_view.addView(mLegendView, params)
             mLegendView!!.visibility = View.INVISIBLE
             btnLegend.isClickable = false
-            mLegendView!!.setOnClickListener {
-                // show data size added
-                if (SettingsUtil.isDebugVersion) {
+
+            if (SettingsUtil.isDebugVersion) {
+                mLegendView!!.setOnClickListener {
+                    // show data size added
                     val agDatas = LocalDatabaseUtil.read(
                         this,
                         LocalDatabaseUtil.CACHE_AG_FILE_NAME,
-                        13, LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME
+                        13, LocalDatabaseUtil.CACHE_AG_FILE_NAME
                     ) as List<IAGVector>
 
                     val locationDatas = LocalDatabaseUtil.read(
@@ -160,7 +161,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
                     Toast.makeText(
                         this@MainActivity,
-                        "ag added: ${agDatas.size}, location added: ${locationDatas.size}",
+                        "ag: ${agDatas.size}, location: ${locationDatas.size}",
                         Toast.LENGTH_SHORT
                     ).show()
 
@@ -176,10 +177,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                         }
                     }
                 }
-            }
 
-            mLegendView!!.setOnLongClickListener {
-                if (SettingsUtil.isDebugVersion) {
+                mLegendView!!.setOnLongClickListener {
                     if (deleteCount == 2) {
                         deleteLocalData()
                         deleteCount = 0
@@ -192,9 +191,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                         )
                             .show()
                     }
-                }
 
-                true
+                    true
+                }
             }
 
             AlphaAnimation.showViewAnimation(mLegendView, object : Animator.AnimatorListener {

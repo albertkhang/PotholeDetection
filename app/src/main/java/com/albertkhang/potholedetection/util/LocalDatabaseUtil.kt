@@ -1,9 +1,14 @@
 package com.albertkhang.potholedetection.util
 
 import android.content.Context
+import android.util.Log
+import com.albertkhang.potholedetection.model.IVector3D
 import com.albertkhang.potholedetection.model.database.IDatabase
+import com.albertkhang.potholedetection.model.database.ILocation
 import com.albertkhang.potholedetection.model.settings.ISettings
 import io.paperdb.Paper
+import java.text.DecimalFormat
+import java.util.*
 
 class LocalDatabaseUtil {
     companion object {
@@ -23,45 +28,19 @@ class LocalDatabaseUtil {
             }
         }
 
-//        fun filter(hour: Int) {
-//            // TODO: Cứ mỗi 1h là tự update, không quan tâm hiện tại là mấy giờ
-//
-//            val agData: List<IAGVector>? = readData(AG_VECTOR_BOOK, hour) as List<IAGVector>?
-//            val locationData: List<ILocation>? = readData(LOCATION_BOOK, hour) as List<ILocation>?
-//
-//            val filteredAGData = ArrayList<IAGVector>()
-//            val filteredLocationData = ArrayList<ILocation>()
-//
-//            val filteredData = ArrayList<IDatabase>()
-//
-//            // filter IRI > 0.3
-//            if (agData != null && agData.isNotEmpty()) {
-//                agData.forEach {
-//                    val iri =
-//                        IVector3D(it.ax, it.ay, it.az).project(IVector3D(it.gx, it.gy, it.gz))
-//                    if (iri > 0.3) {
-//                        filteredAGData.add(it)
-//                    }
-//                }
-//            }
-//            Log.d(TAG, "filteredAGData: ${filteredAGData.size}")
-//
-//            if (locationData != null && locationData.isNotEmpty()) {
-//                // filter provider = gps && speed >= 1.38889 m/s = 5km/h
-//                locationData.forEach {
-//                    if ((it.provider == ILocation.PROVIDER_GPS || it.provider == ILocation.PROVIDER_PASSIVE) && it.speed >= readSettings()!!.detectNotification.minLocalWriteSpeed) {
-//                        filteredLocationData.add(it)
-//                    }
-//                }
-//            }
-//            Log.d(TAG, "filteredLocationData: ${filteredLocationData.size}")
-//
-//            // find start and end location
-//            //
-//            filteredLocationData.forEach {
-//
-//            }
-//        }
+        // Filter level 2
+        // TODO: chạy ở background thread
+        //
+        fun filter() {
+            // TODO: Cứ mỗi 1h là tự update, không quan tâm hiện tại là mấy giờ
+
+            val year = Calendar.getInstance().get(Calendar.YEAR)
+            val month = Calendar.getInstance().get(Calendar.MONTH) + 1
+            val date = Calendar.getInstance().get(Calendar.DATE)
+            val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+
+            Log.d(TAG, "$year$month${DecimalFormat("##").format(date)}$hour")
+        }
 
         fun writeSettings(settings: ISettings) {
             if (SettingsUtil.isDebugVersion) {
@@ -72,10 +51,10 @@ class LocalDatabaseUtil {
         }
 
         fun readSettings(): ISettings? {
-            if (SettingsUtil.isDebugVersion) {
-                return Paper.book().read(DEBUG_SETTINGS_BOOK, null)
+            return if (SettingsUtil.isDebugVersion) {
+                Paper.book().read(DEBUG_SETTINGS_BOOK, null)
             } else {
-                return Paper.book().read(RELEASE_SETTINGS_BOOK, null)
+                Paper.book().read(RELEASE_SETTINGS_BOOK, null)
             }
         }
 
@@ -85,10 +64,7 @@ class LocalDatabaseUtil {
         fun add(context: Context, fileName: String, data: IDatabase) {
             val currentHour = 13
 
-            FileUtil.write(
-                context,
-                "${fileName}_$currentHour", data
-            )
+            FileUtil.write(context, "${fileName}_$currentHour", data)
         }
 
         /**
@@ -106,7 +82,7 @@ class LocalDatabaseUtil {
         /**
          * Delete data in cache file
          */
-        fun delete(context: Context, fileName: String, hour: Int): Boolean {
+        fun delete(context: Context, fileName: String, hour: Int):Boolean {
             return FileUtil.delete(context, "${fileName}_$hour")
         }
     }

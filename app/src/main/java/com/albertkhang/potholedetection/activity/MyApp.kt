@@ -1,6 +1,7 @@
 package com.albertkhang.potholedetection.activity
 
 import android.app.Application
+import com.albertkhang.potholedetection.util.FileUtil
 import com.albertkhang.potholedetection.util.LocalDatabaseUtil
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore

@@ -57,8 +57,8 @@ class DetectingNotification : Service() {
                             val iri: Float =
                                 decimalFormat.format(accelerometer.iri(gravity)).toFloat()
 
+                            // Filter ADVector level 1
                             if (iri > minLocalWriteIRI) {
-                                // TODO: save to file
                                 LocalDatabaseUtil.add(
                                     context,
                                     LocalDatabaseUtil.CACHE_AG_FILE_NAME,
@@ -80,8 +80,8 @@ class DetectingNotification : Service() {
                         val data = ILocation(location)
                         data.timestamps = System.currentTimeMillis()
 
+                        // Filter Location level 1
                         if (location.speed >= minLocalWriteSpeed) {
-                            // TODO: save to file
                             LocalDatabaseUtil.add(
                                 context,
                                 LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME,
