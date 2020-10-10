@@ -31,7 +31,7 @@ abstract class AccelerometerSensor(context: Context) : SensorEventListener, Base
 
     fun start() {
         mSensorManager.registerListener(this, mAccelerometerSensor, SensorManager.SENSOR_DELAY_NORMAL)
-        mSensorManager.registerListener(this, mGravitySensor, SensorManager.SENSOR_DELAY_FASTEST)
+        mSensorManager.registerListener(this, mGravitySensor, SensorManager.SENSOR_DELAY_NORMAL)
     }
 
     fun stop() {

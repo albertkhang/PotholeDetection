@@ -62,18 +62,18 @@ abstract class LocationSensor(context: Context) : LocationListener, BaseSensor {
 
             // This provider determines location based on nearby of cell tower and WiFi access points.
             // Results are retrieved by means of a network lookup.
-            locationManager.requestLocationUpdates(
-                LocationManager.NETWORK_PROVIDER,
-                MIN_MILLISECOND_UPDATES.toLong(),
-                MIN_METER_UPDATES.toFloat(), this
-            )
+//            locationManager.requestLocationUpdates(
+//                LocationManager.NETWORK_PROVIDER,
+//                MIN_MILLISECOND_UPDATES.toLong(),
+//                MIN_METER_UPDATES.toFloat(), this
+//            )
 
             // A special location provider for receiving locations without actually initiating a location fix.
-            locationManager.requestLocationUpdates(
-                LocationManager.PASSIVE_PROVIDER,
-                MIN_MILLISECOND_UPDATES.toLong(),
-                MIN_METER_UPDATES.toFloat(), this
-            )
+//            locationManager.requestLocationUpdates(
+//                LocationManager.PASSIVE_PROVIDER,
+//                MIN_MILLISECOND_UPDATES.toLong(),
+//                MIN_METER_UPDATES.toFloat(), this
+//            )
         }
     }
 

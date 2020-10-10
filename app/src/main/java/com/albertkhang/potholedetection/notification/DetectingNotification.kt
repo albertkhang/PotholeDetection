@@ -48,7 +48,6 @@ class DetectingNotification : Service() {
         private val tempAGVector = IAGVector()
         private val tempLocation = ILocation()
 
-
         private fun initSensors(context: Context) {
             mAccelerometerSensor =
                 object : AccelerometerSensor(context) {
@@ -56,55 +55,25 @@ class DetectingNotification : Service() {
                         val iri = accelerometer.iri(gravity)
 
                         if (tempAGVector.iri != iri && iri >= 0.05) {
-                            Thread {
-                                tempAGVector.timestamps = System.currentTimeMillis()
-                                tempAGVector.set(accelerometer, gravity)
-                                tempAGVector.iri = iri
+                            tempAGVector.timestamps = System.currentTimeMillis()
+                            tempAGVector.set(accelerometer, gravity)
+                            tempAGVector.iri = iri
 
-                                LocalDatabaseUtil.add(
-                                    context,
-                                    LocalDatabaseUtil.CACHE_AG_FILE_NAME,
-                                    tempAGVector
-                                )
+                            LocalDatabaseUtil.add(
+                                context,
+                                LocalDatabaseUtil.CACHE_AG_FILE_NAME,
+                                tempAGVector
+                            )
 
-                                Log.i(TAG, "iri $iri")
-                            }.start()
+                            Log.i(TAG, tempAGVector.toString())
                         }
-
-//                        if (accelerometer != null && gravity != null) {
-//                            val data = IAGVector(accelerometer, gravity)
-//                            data.timestamps = System.currentTimeMillis()
-//
-//                            val iri: Float = accelerometer.iri(gravity)
-////                            Log.i(TAG, "iri $iri")
-//
-//                            LocalDatabaseUtil.add(
-//                                context,
-//                                LocalDatabaseUtil.CACHE_AG_FILE_NAME,
-//                                data
-//                            )
-//
-//                            // Filter ADVector level 1
-////                            if (iri > minLocalWriteIRI) {
-////                                LocalDatabaseUtil.add(
-////                                    context,
-////                                    LocalDatabaseUtil.CACHE_AG_FILE_NAME,
-////                                    data
-////                                )
-//
-////                                if (isLogData) {
-////                                    Log.i(TAG, "iri $iri added")
-////                                }
-////                                Log.i(TAG, "iri $iri added")
-////                            }
-//                        }
                     }
 
                 }
 
             mLocationSensor = object : LocationSensor(context) {
                 override fun onUpdate(location: Location) {
-                    Thread {
+                    if (tempLocation != ILocation(location)) {
                         tempLocation.set(location)
                         tempLocation.timestamps = System.currentTimeMillis()
 
@@ -113,33 +82,10 @@ class DetectingNotification : Service() {
                             LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME,
                             tempLocation
                         )
-                    }.start()
-                }
-//                    if (location !== null) {
-//                        val data = ILocation(location)
-//                        data.timestamps = System.currentTimeMillis()
-//
-//                        // Filter Location level 1
-//                        Log.i(TAG, "location $data")
-//                        LocalDatabaseUtil.add(
-//                            context,
-//                            LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME,
-//                            data
-//                        )
-//                        if (location.speed >= minLocalWriteSpeed) {
-//                            LocalDatabaseUtil.add(
-//                                context,
-//                                LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME,
-//                                data
-//                            )
-//
-////                            if (isLogData) {
-////                                Log.i(TAG, "location $data added")
-////                            }
-//                        }
-//                    }
-//                }
 
+                        Log.i(TAG, tempLocation.toString())
+                    }
+                }
             }
         }
 
@@ -181,7 +127,6 @@ class DetectingNotification : Service() {
 //        mainHandler.post(object : Runnable {
 //            override fun run() {
 //                if (isRunning) {
-//                    DataFilterUtil.filter(this)
 //                    DataFilterUtil.filter()
 //                    mainHandler.postDelayed(this, 1000)
 //                }

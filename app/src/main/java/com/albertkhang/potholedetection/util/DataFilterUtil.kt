@@ -61,7 +61,13 @@ class DataFilterUtil {
                 // ================================================================
 
                 val location = LinkedList<ILocation>()
-                location.addAll(l)
+                l.forEach {
+                    if (it.provider == "gps") {
+                        location.add(it)
+                    }
+                }
+
+//                location.addAll(l)
 
                 val agVector = LinkedList<IAGVector>()
                 agVector.addAll(ag)
@@ -118,7 +124,11 @@ class DataFilterUtil {
                             IVector3D(data.gx, data.gy, data.gz)
                         )
 //                        Log.d(TAG, "iri=${iri}")
-                        tempIRI.add(iri)
+
+                        if (iri < 2) {
+                            tempIRI.add(iri)
+                        }
+
                         mixed.removeFirst()
                     }
 
@@ -155,11 +165,12 @@ class DataFilterUtil {
 
                 Log.d(TAG, "tempUpload=${tempUpload.size}")
                 Log.d(TAG, "highest=$highest, lowest=$lowest")
-//                tempUpload.forEach {
+                tempUpload.forEach {
 //                    it.iri -= lowest
-////                    Log.d(TAG, it.toString())
-//                    write(context, it)
-//                }
+//                    Log.d(TAG, it.toString())
+                    write(context, it)
+                }
+                Log.d(TAG, "write done")
             }.start()
         }
 

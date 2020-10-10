@@ -63,19 +63,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 //        readAll()
 
 //        LocalDatabaseUtil.filter()
+//        DataFilterUtil.filter(this)
     }
 
     private fun addLines() {
-//        mMap.addPolyline(
-//                PolylineOptions()
-//                    .add(
-//                        LatLng(10.75797312,106.71605235), LatLng(10.75834856,106.71557039)
-//                    ).width(13f).color(Color.BLUE)
-//                    .geodesic(true)
-//            )
-//        // move camera to zoom on map
-//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(10.75797312,106.71605235), 16f))
-
         val f = File("${externalCacheDir}/potholedetection/tmp.txt")
         if (f.exists()) {
             val fileReader = FileReader(f)
@@ -87,6 +78,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             }
 
             fileReader.close()
+
+            Log.d("MainActivity", datas.size.toString())
 
             datas.forEach {
                 val polyline = mMap.addPolyline(
@@ -107,7 +100,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
             }
 
-            Log.d("MainActivity", datas.size.toString())
+//            Log.d("MainActivity", datas.size.toString())
         }
     }
 
@@ -201,6 +194,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             }
 
             addLegendView()
+        }
+
+        btnMyLocation.setOnLongClickListener {
+            if (SettingsUtil.isDebugVersion) {
+                addLines()
+            }
+
+            true
         }
     }
 
@@ -384,7 +385,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         initGoogleMap()
         addPreparingMapProgress()
         moveToMyLocation()
-//        addLines()
 
     }
 
