@@ -2,9 +2,12 @@ package com.albertkhang.potholedetection.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.View.VISIBLE
+import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.service.SettingsService.Companion.SETTING_SERVICE_TAG
@@ -15,6 +18,7 @@ import com.albertkhang.potholedetection.util.LocalDatabaseUtil
 import com.albertkhang.potholedetection.util.NetworkUtil
 import com.albertkhang.potholedetection.util.PermissionUtil
 import com.albertkhang.potholedetection.util.SettingsUtil
+import kotlinx.android.synthetic.main.activity_splash.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -63,13 +67,15 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun getSettings() {
-        if (DetectingNotification.isStarted) {
-            DetectingNotification.stopService(this@SplashActivity)
-        }
+//        if (DetectingNotification.isStarted) {
+//            DetectingNotification.stopService(this@SplashActivity)
+//        }
 
         val settingsUtil = SettingsUtil()
         settingsUtil.getSettings(object : Callback<ISettings> {
             override fun onResponse(call: Call<ISettings>, response: Response<ISettings>) {
+                loading.visibility = VISIBLE
+                
                 if (response.code() == 200) {
                     val newSettings = response.body()
                     logAllSettings(newSettings.toString())
