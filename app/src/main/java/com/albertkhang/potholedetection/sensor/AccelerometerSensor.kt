@@ -30,15 +30,15 @@ abstract class AccelerometerSensor(context: Context) : SensorEventListener, Base
     }
 
     fun start() {
-        mSensorManager.registerListener(this, mAccelerometerSensor, SENSOR_DELAY)
-        mSensorManager.registerListener(this, mGravitySensor, SENSOR_DELAY)
+        mSensorManager.registerListener(this, mAccelerometerSensor, SensorManager.SENSOR_DELAY_NORMAL)
+        mSensorManager.registerListener(this, mGravitySensor, SensorManager.SENSOR_DELAY_FASTEST)
     }
 
     fun stop() {
         mSensorManager.unregisterListener(this)
     }
 
-    abstract fun onUpdate(accelerometer: IVector3D?, gravity: IVector3D?)
+    abstract fun onUpdate(accelerometer: IVector3D, gravity: IVector3D)
 
     override fun onSensorChanged(sensorEvent: SensorEvent) {
         val type = sensorEvent.sensor.type
@@ -55,7 +55,7 @@ abstract class AccelerometerSensor(context: Context) : SensorEventListener, Base
             setGravity(x, y, z)
         }
         if (mAccelerometerVector != null && mGravityVector != null) {
-            onUpdate(mAccelerometerVector, mGravityVector)
+            onUpdate(mAccelerometerVector!!, mGravityVector!!)
         }
     }
 

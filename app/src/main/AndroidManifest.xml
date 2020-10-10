@@ -31,16 +31,6 @@
             android:value="@string/google_maps_key" />
 
         <receiver
-            android:name=".broadcast.HourChangeReceiver"
-            android:label="HourChangeReceiver">
-            <intent-filter>
-                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
-                <action android:name="android.intent.action.TIME_SET" />
-                <action android:name="android.intent.action.TIME_TICK" />
-            </intent-filter>
-        </receiver>
-
-        <receiver
             android:name=".broadcast.NetworkChangeReceiver"
             android:label="NetworkChangeReceiver">
             <intent-filter>

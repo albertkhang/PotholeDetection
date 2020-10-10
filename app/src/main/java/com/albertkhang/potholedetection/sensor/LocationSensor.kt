@@ -28,7 +28,7 @@ abstract class LocationSensor(context: Context) : LocationListener, BaseSensor {
             LocalDatabaseUtil.readSettings()!!.location.minMillisecondsUpdate
 
         /**
-         * Minimum Time Update
+         * Minimum Meter Update
          *
          * @Unit meter
          */
@@ -81,7 +81,7 @@ abstract class LocationSensor(context: Context) : LocationListener, BaseSensor {
         locationManager.removeUpdates(this)
     }
 
-    abstract fun onUpdate(location: Location?)
+    abstract fun onUpdate(location: Location)
 
     override fun onLocationChanged(location: Location) {
         onUpdate(location)

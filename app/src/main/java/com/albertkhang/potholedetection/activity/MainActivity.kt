@@ -18,23 +18,23 @@ import androidx.core.content.ContextCompat
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.animation.AlphaAnimation
 import com.albertkhang.potholedetection.broadcast.NetworkChangeReceiver
+import com.albertkhang.potholedetection.model.UploadData
 import com.albertkhang.potholedetection.model.database.IAGVector
 import com.albertkhang.potholedetection.model.database.IDatabase
 import com.albertkhang.potholedetection.model.database.ILocation
-import com.albertkhang.potholedetection.util.CloudDatabaseUtil
-import com.albertkhang.potholedetection.util.DisplayUtil
-import com.albertkhang.potholedetection.util.LocalDatabaseUtil
-import com.albertkhang.potholedetection.util.SettingsUtil
+import com.albertkhang.potholedetection.util.*
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.PolylineOptions
+import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
+import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_main.*
+import java.io.File
+import java.io.FileReader
 
 @SuppressLint("MissingPermission")
 // Checked permissions before go to this activity
@@ -66,16 +66,63 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun addLines() {
-        mMap.addPolyline(
-                PolylineOptions()
-                    .add(
-                        LatLng(10.75797312,106.71605235), LatLng(10.75797312,106.71605235), LatLng(10.75826056,106.71571681),
-                        LatLng(10.75834856,106.71557039)
-                    ).width(16f).color(Color.BLUE)
-                    .geodesic(true)
-            )
-        // move camera to zoom on map
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(10.75797312,106.71605235), 16f))
+//        mMap.addPolyline(
+//                PolylineOptions()
+//                    .add(
+//                        LatLng(10.75797312,106.71605235), LatLng(10.75834856,106.71557039)
+//                    ).width(13f).color(Color.BLUE)
+//                    .geodesic(true)
+//            )
+//        // move camera to zoom on map
+//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(10.75797312,106.71605235), 16f))
+
+        val f = File("${externalCacheDir}/potholedetection/tmp.txt")
+        if (f.exists()) {
+            val fileReader = FileReader(f)
+            val dataString = fileReader.readLines()
+            val datas = ArrayList<UploadData>()
+
+            dataString.forEach {
+                datas.add(Gson().fromJson(it, UploadData::class.java))
+            }
+
+            fileReader.close()
+
+            datas.forEach {
+                val polyline = mMap.addPolyline(
+                    PolylineOptions()
+                        .add(it.startLatLng)
+                        .add(it.endLatLng)
+                )
+
+                if (it.iri < 0.3f) {
+                    polyline.tag = "G"
+                } else if (it.iri < 0.7f) {
+                    polyline.tag = "A"
+                } else {
+                    polyline.tag = "B"
+                }
+
+                stylePolyline(polyline)
+
+            }
+
+            Log.d("MainActivity", datas.size.toString())
+        }
+    }
+
+    private val POLYLINE_STROKE_WIDTH_PX = 12
+
+    private fun stylePolyline(polyline: Polyline) {
+        polyline.startCap = RoundCap()
+        polyline.endCap = RoundCap()
+        polyline.width = POLYLINE_STROKE_WIDTH_PX.toFloat()
+        polyline.jointType = JointType.ROUND
+        when (polyline.tag) {
+            "G" -> polyline.color = ContextCompat.getColor(this, R.color.colorGoodLegend)
+            "A" -> polyline.color = ContextCompat.getColor(this, R.color.colorAverageLegend)
+            "B" -> polyline.color = ContextCompat.getColor(this, R.color.colorBadLegend)
+        }
     }
 
     private var deleteCount = 0
@@ -336,8 +383,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap = googleMap
         initGoogleMap()
         addPreparingMapProgress()
-//        moveToMyLocation()
-        addLines()
+        moveToMyLocation()
+//        addLines()
+
     }
 
     private fun moveToMyLocation() {

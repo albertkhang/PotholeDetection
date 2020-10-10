@@ -3,10 +3,16 @@ package com.albertkhang.potholedetection.util
 import android.content.Context
 import android.util.Log
 import com.albertkhang.potholedetection.model.IVector3D
+import com.albertkhang.potholedetection.model.UploadData
 import com.albertkhang.potholedetection.model.database.IAGVector
 import com.albertkhang.potholedetection.model.database.IDatabase
 import com.albertkhang.potholedetection.model.database.ILocation
 import com.google.android.gms.maps.model.LatLng
+import com.google.gson.Gson
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileWriter
+import java.io.PrintWriter
 import java.util.*
 
 class DataFilterUtil {
@@ -32,6 +38,11 @@ class DataFilterUtil {
 
         fun filter(context: Context) {
             Thread {
+                val f = File("${context.externalCacheDir}/potholedetection/tmp.txt")
+                if (f.exists()) {
+                    return@Thread
+                }
+
                 val ag = LocalDatabaseUtil.read(
                     context,
                     LocalDatabaseUtil.CACHE_AG_FILE_NAME,
@@ -66,9 +77,6 @@ class DataFilterUtil {
                     agVector.removeLast()
                 }
 
-                // agVector=2329
-                // location=3390
-                // total=5719
                 Log.d(TAG, "agVector=${agVector.size}, location=${location.size}")
 
                 // now | firstLocationTimestamp < list IAGVector < lastLocationTimestamp |
@@ -90,16 +98,9 @@ class DataFilterUtil {
                 agVector.clear()
                 location.clear()
 
-                // mixed=5719
-
                 Log.d(TAG, "agVector=${agVector.size}, location=${location.size}")
                 Log.d(TAG, "mixed=${mixed.size}")
 
-                data class UploadData(
-                    val startLatLng: LatLng,
-                    val endLatLng: LatLng,
-                    var iri: Float
-                )
 
                 var start: ILocation = mixed.first as ILocation
                 mixed.removeFirst()
@@ -154,11 +155,30 @@ class DataFilterUtil {
 
                 Log.d(TAG, "tempUpload=${tempUpload.size}")
                 Log.d(TAG, "highest=$highest, lowest=$lowest")
-                tempUpload.forEach {
-                    it.iri -= lowest
-                    Log.d(TAG, it.toString())
-                }
+//                tempUpload.forEach {
+//                    it.iri -= lowest
+////                    Log.d(TAG, it.toString())
+//                    write(context, it)
+//                }
             }.start()
+        }
+
+        private fun write(context: Context, data: UploadData) {
+            val folder = File("${context.externalCacheDir}/potholedetection")
+            folder.mkdirs()
+
+            val f = File("${context.externalCacheDir}/potholedetection/tmp.txt")
+            if (!f.exists()) {
+                f.createNewFile()
+            }
+
+            val fileWriter = FileWriter(f, true)
+
+            val bw = BufferedWriter(fileWriter)
+            val out = PrintWriter(bw)
+            out.println(Gson().toJson(data))
+            out.close()
+            fileWriter.close()
         }
     }
 }

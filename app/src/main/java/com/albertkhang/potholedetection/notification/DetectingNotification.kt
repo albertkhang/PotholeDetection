@@ -9,6 +9,7 @@ import android.content.Intent
 import android.location.Location
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.albertkhang.potholedetection.R
@@ -18,7 +19,6 @@ import com.albertkhang.potholedetection.model.database.IAGVector
 import com.albertkhang.potholedetection.model.database.ILocation
 import com.albertkhang.potholedetection.sensor.AccelerometerSensor
 import com.albertkhang.potholedetection.sensor.LocationSensor
-import com.albertkhang.potholedetection.util.DataFilterUtil
 import com.albertkhang.potholedetection.util.LocalDatabaseUtil
 import java.text.DecimalFormat
 
@@ -45,56 +45,100 @@ class DetectingNotification : Service() {
         private lateinit var mAccelerometerSensor: AccelerometerSensor
         private lateinit var mLocationSensor: LocationSensor
 
-        private val decimalFormat = DecimalFormat(LocalDatabaseUtil.readSettings()!!.iriFormat)
+        private val tempAGVector = IAGVector()
+        private val tempLocation = ILocation()
+
 
         private fun initSensors(context: Context) {
             mAccelerometerSensor =
                 object : AccelerometerSensor(context) {
-                    override fun onUpdate(accelerometer: IVector3D?, gravity: IVector3D?) {
-                        if (accelerometer != null && gravity != null) {
-                            val data = IAGVector(accelerometer, gravity)
-                            data.timestamps = System.currentTimeMillis()
+                    override fun onUpdate(accelerometer: IVector3D, gravity: IVector3D) {
+                        val iri = accelerometer.iri(gravity)
 
-                            val iri: Float =
-                                decimalFormat.format(accelerometer.iri(gravity)).toFloat()
+                        if (tempAGVector.iri != iri && iri >= 0.05) {
+                            Thread {
+                                tempAGVector.timestamps = System.currentTimeMillis()
+                                tempAGVector.set(accelerometer, gravity)
+                                tempAGVector.iri = iri
 
-                            // Filter ADVector level 1
-                            if (iri > minLocalWriteIRI) {
                                 LocalDatabaseUtil.add(
                                     context,
                                     LocalDatabaseUtil.CACHE_AG_FILE_NAME,
-                                    data
+                                    tempAGVector
                                 )
 
-//                                if (isLogData) {
-//                                    Log.i(TAG, "iri $iri added")
-//                                }
-                            }
+                                Log.i(TAG, "iri $iri")
+                            }.start()
                         }
+
+//                        if (accelerometer != null && gravity != null) {
+//                            val data = IAGVector(accelerometer, gravity)
+//                            data.timestamps = System.currentTimeMillis()
+//
+//                            val iri: Float = accelerometer.iri(gravity)
+////                            Log.i(TAG, "iri $iri")
+//
+//                            LocalDatabaseUtil.add(
+//                                context,
+//                                LocalDatabaseUtil.CACHE_AG_FILE_NAME,
+//                                data
+//                            )
+//
+//                            // Filter ADVector level 1
+////                            if (iri > minLocalWriteIRI) {
+////                                LocalDatabaseUtil.add(
+////                                    context,
+////                                    LocalDatabaseUtil.CACHE_AG_FILE_NAME,
+////                                    data
+////                                )
+//
+////                                if (isLogData) {
+////                                    Log.i(TAG, "iri $iri added")
+////                                }
+////                                Log.i(TAG, "iri $iri added")
+////                            }
+//                        }
                     }
 
                 }
 
             mLocationSensor = object : LocationSensor(context) {
-                override fun onUpdate(location: Location?) {
-                    if (location !== null) {
-                        val data = ILocation(location)
-                        data.timestamps = System.currentTimeMillis()
+                override fun onUpdate(location: Location) {
+                    Thread {
+                        tempLocation.set(location)
+                        tempLocation.timestamps = System.currentTimeMillis()
 
-                        // Filter Location level 1
-                        if (location.speed >= minLocalWriteSpeed) {
-                            LocalDatabaseUtil.add(
-                                context,
-                                LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME,
-                                data
-                            )
-
-//                            if (isLogData) {
-//                                Log.i(TAG, "location $data added")
-//                            }
-                        }
-                    }
+                        LocalDatabaseUtil.add(
+                            context,
+                            LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME,
+                            tempLocation
+                        )
+                    }.start()
                 }
+//                    if (location !== null) {
+//                        val data = ILocation(location)
+//                        data.timestamps = System.currentTimeMillis()
+//
+//                        // Filter Location level 1
+//                        Log.i(TAG, "location $data")
+//                        LocalDatabaseUtil.add(
+//                            context,
+//                            LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME,
+//                            data
+//                        )
+//                        if (location.speed >= minLocalWriteSpeed) {
+//                            LocalDatabaseUtil.add(
+//                                context,
+//                                LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME,
+//                                data
+//                            )
+//
+////                            if (isLogData) {
+////                                Log.i(TAG, "location $data added")
+////                            }
+//                        }
+//                    }
+//                }
 
             }
         }
@@ -123,8 +167,8 @@ class DetectingNotification : Service() {
     }
 
 //    private val mainHandler = Handler(Looper.getMainLooper())
-
-//    private var isRunning = false
+//
+////    private var isRunning = false
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         // do heavy work on a background thread
@@ -137,7 +181,7 @@ class DetectingNotification : Service() {
 //        mainHandler.post(object : Runnable {
 //            override fun run() {
 //                if (isRunning) {
-                    DataFilterUtil.filter(this)
+//                    DataFilterUtil.filter(this)
 //                    DataFilterUtil.filter()
 //                    mainHandler.postDelayed(this, 1000)
 //                }
@@ -199,7 +243,7 @@ class DetectingNotification : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val serviceChannel = NotificationChannel(
                 CHANNEL_ID, "Foreground Service Channel",
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = "Foreground Service Description"
                 setShowBadge(false)
