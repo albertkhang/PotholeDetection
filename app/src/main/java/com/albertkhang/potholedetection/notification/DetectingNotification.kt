@@ -83,7 +83,7 @@ class DetectingNotification : Service() {
                             tempLocation
                         )
 
-                        Log.i(TAG, tempLocation.toString())
+                        Log.d(TAG, tempLocation.toString())
                     }
                 }
             }
