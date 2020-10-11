@@ -14,6 +14,7 @@ import java.io.File
 import java.io.FileWriter
 import java.io.PrintWriter
 import java.util.*
+import kotlin.collections.HashMap
 
 class DataFilterUtil {
     companion object {
@@ -43,13 +44,13 @@ class DataFilterUtil {
                     return@Thread
                 }
 
-                val ag = LocalDatabaseUtil.read(
+                var ag = LocalDatabaseUtil.read(
                     context,
                     LocalDatabaseUtil.CACHE_AG_FILE_NAME,
                     13, LocalDatabaseUtil.CACHE_AG_FILE_NAME
                 ) as List<IAGVector>
 
-                val l = LocalDatabaseUtil.read(
+                var l = LocalDatabaseUtil.read(
                     context,
                     LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME,
                     13, LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME
@@ -61,16 +62,13 @@ class DataFilterUtil {
                 // ================================================================
 
                 val location = LinkedList<ILocation>()
-                l.forEach {
-                    if (it.provider == "gps") {
-                        location.add(it)
-                    }
-                }
-
-//                location.addAll(l)
+                location.addAll(l)
 
                 val agVector = LinkedList<IAGVector>()
                 agVector.addAll(ag)
+
+                ag = emptyList()
+                l = emptyList()
 
                 val firstLocationTimestamp = location.first.timestamps
                 val lastLocationTimestamp = location.last.timestamps
@@ -83,7 +81,7 @@ class DataFilterUtil {
                     agVector.removeLast()
                 }
 
-                Log.d(TAG, "agVector=${agVector.size}, location=${location.size}")
+//                Log.d(TAG, "agVector=${agVector.size}, location=${location.size}")
 
                 // now | firstLocationTimestamp < list IAGVector < lastLocationTimestamp |
 
@@ -104,8 +102,8 @@ class DataFilterUtil {
                 agVector.clear()
                 location.clear()
 
-                Log.d(TAG, "agVector=${agVector.size}, location=${location.size}")
-                Log.d(TAG, "mixed=${mixed.size}")
+//                Log.d(TAG, "agVector=${agVector.size}, location=${location.size}")
+//                Log.d(TAG, "mixed=${mixed.size}")
 
 
                 var start: ILocation = mixed.first as ILocation
@@ -114,8 +112,10 @@ class DataFilterUtil {
                 val tempIRI = LinkedList<Float>()
                 val tempUpload = LinkedList<UploadData>()
 
-                var highest = 0f
-                var lowest = 1f
+//                var highest = 0f
+//                var lowest = 1f
+
+//                val hash = HashMap<Int, Int>()
 
                 while (mixed.isNotEmpty()) {
                     if (mixed.first is IAGVector) {
@@ -143,19 +143,40 @@ class DataFilterUtil {
                                 sum += it
                             }
                             val iri = sum / tempIRI.size
-                            if (iri > highest) {
-                                highest = iri
-                            }
-                            if (iri < lowest) {
-                                lowest = iri
-                            }
+//                            if (iri > highest) {
+//                                highest = iri
+//                            }
+//                            if (iri < lowest) {
+//                                lowest = iri
+//                            }
 //                            Log.d(TAG, "average iri=${iri}")
 
                             // clear tempIRI
                             tempIRI.clear()
 
+                            val averageSpeed = (start.speed + end.speed) / 2
+
+//                            val t: Int = (iri / 0.1f).toInt()
+////                            Log.d(TAG, "t=$t")
+//                            var value = hash.get(t)
+//                            if (value == null) {
+//                                value = 1
+//                            } else {
+//                                value++
+//                            }
+//                            hash.put(t, value)
+
                             // add vào tempUpload
-                            tempUpload.add(UploadData(start.latLng, end.latLng, iri))
+                            if (averageSpeed >= 1.38889) {
+                                tempUpload.add(
+                                    UploadData(
+                                        start.latLng,
+                                        end.latLng,
+                                        iri,
+                                        averageSpeed
+                                    )
+                                )
+                            }
                         }
 
                         start = end
@@ -163,8 +184,21 @@ class DataFilterUtil {
                     }
                 }
 
-                Log.d(TAG, "tempUpload=${tempUpload.size}")
-                Log.d(TAG, "highest=$highest, lowest=$lowest")
+//                Log.d(TAG, "hash=${hash.size}")
+//                hash.forEach {
+//                    Log.d(TAG, "key=${it.key}, value=${it.value}")
+//                }
+
+//                while (tempUpload.first.speed < 1.38889) {
+//                    tempUpload.removeFirst()
+//                }
+//
+//                while (tempUpload.last.speed < 1.38889) {
+//                    tempUpload.removeLast()
+//                }
+
+//                Log.d(TAG, "tempUpload=${tempUpload.size}")
+//                Log.d(TAG, "highest=$highest, lowest=$lowest")
                 tempUpload.forEach {
 //                    it.iri -= lowest
 //                    Log.d(TAG, it.toString())

@@ -62,7 +62,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         // read all data from cloud db
 //        readAll()
 
-//        DataFilterUtil.filter(this)
+        DataFilterUtil.filter(this)
     }
 
     private fun addLines() {
@@ -78,8 +78,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
             fileReader.close()
 
-            Log.d("MainActivity", datas.size.toString())
-
             datas.forEach {
                 val polyline = mMap.addPolyline(
                     PolylineOptions()
@@ -87,19 +85,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                         .add(it.endLatLng)
                 )
 
-                if (it.iri < 0.3f) {
-                    polyline.tag = "G"
-                } else if (it.iri < 0.7f) {
-                    polyline.tag = "A"
-                } else {
-                    polyline.tag = "B"
-                }
+                polyline.tag = it.quality
 
                 stylePolyline(polyline)
-
             }
-
-//            Log.d("MainActivity", datas.size.toString())
         }
     }
 

@@ -74,8 +74,6 @@ class SplashActivity : AppCompatActivity() {
         val settingsUtil = SettingsUtil()
         settingsUtil.getSettings(object : Callback<ISettings> {
             override fun onResponse(call: Call<ISettings>, response: Response<ISettings>) {
-                loading.visibility = VISIBLE
-
                 if (response.code() == 200) {
                     val newSettings = response.body()
                     logAllSettings(newSettings.toString())
