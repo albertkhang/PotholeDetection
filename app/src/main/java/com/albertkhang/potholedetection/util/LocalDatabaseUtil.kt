@@ -1,11 +1,10 @@
 package com.albertkhang.potholedetection.util
 
 import android.content.Context
-import com.albertkhang.potholedetection.model.IPotholeDtected
+import com.albertkhang.potholedetection.model.IPothole
 import com.albertkhang.potholedetection.model.database.IDatabase
 import com.albertkhang.potholedetection.model.settings.ISettings
 import io.paperdb.Paper
-import java.io.File
 
 class LocalDatabaseUtil {
     companion object {
@@ -25,11 +24,6 @@ class LocalDatabaseUtil {
             if (readSettings() == null) {
                 writeSettings(ISettings())
             }
-        }
-
-        fun readCurrentPotholeDetectedFile(context: Context): List<IPotholeDtected> {
-            val currentHour = 13
-            return FileUtil.readFilteredCache(context, "${CACHE_FILTERED_FILE_NAME}_$currentHour")
         }
 
         fun writeSettings(settings: ISettings) {
@@ -52,16 +46,13 @@ class LocalDatabaseUtil {
          * Add new data at bottom of cache file
          */
         fun addRaw(context: Context, fileName: String, data: IDatabase) {
-            val currentHour = 13
-
-            FileUtil.writeRaw(context, "${fileName}_$currentHour", data)
+            FileUtil.writeRaw(context, fileName, data)
         }
 
-        fun writeFilteredList(context: Context, data: List<IPotholeDtected>): Boolean {
-            val currentHour = 13
+        fun writeFilteredList(context: Context, data: List<IPothole>): Boolean {
             return FileUtil.writeFilteredCache(
                 context,
-                "${CACHE_FILTERED_FILE_NAME}_$currentHour",
+                CACHE_FILTERED_FILE_NAME,
                 data
             )
         }
@@ -72,10 +63,9 @@ class LocalDatabaseUtil {
         fun read(
             context: Context,
             fileName: String,
-            hour: Int,
             type: String
         ): List<IDatabase> {
-            return FileUtil.read(context, "${fileName}_$hour", type)
+            return FileUtil.read(context, fileName, type)
         }
 
         /**
@@ -83,6 +73,10 @@ class LocalDatabaseUtil {
          */
         fun delete(context: Context, fileName: String, hour: Int): Boolean {
             return FileUtil.delete(context, "${fileName}_$hour")
+        }
+
+        fun deleteAllCacheFile(context: Context): Boolean {
+            return FileUtil.deleteAllCacheFile(context)
         }
     }
 }

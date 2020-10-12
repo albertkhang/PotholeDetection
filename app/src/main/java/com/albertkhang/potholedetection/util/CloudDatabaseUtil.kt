@@ -1,50 +1,39 @@
 package com.albertkhang.potholedetection.util
 
-import com.albertkhang.potholedetection.model.IPotholeDtected
+import android.util.Log
+import com.albertkhang.potholedetection.model.IPothole
+import com.albertkhang.potholedetection.model.IUserPothole
 import com.albertkhang.potholedetection.model.database.IAGVector
 import com.albertkhang.potholedetection.model.database.IDatabase
 import com.albertkhang.potholedetection.model.database.ILocation
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.firestore.ktx.firestoreSettings
 import com.google.firebase.ktx.Firebase
 
 class CloudDatabaseUtil {
     private val TAG = "CloudDatabase"
-    val db: FirebaseFirestore = Firebase.firestore
 
     companion object {
-        const val COLLECTION_AG_VECTOR = "ag-vector"
-        const val COLLECTION_LOCATION = "location"
-        const val COLLECTION_USERS = "data"
-    }
+        const val COLLECTION_DATA = "data"
 
-    fun write(data: IDatabase, onCompleteListener: OnCompleteListener<DocumentReference>?) {
-        when (data) {
-            is IAGVector -> {
-                db.collection(COLLECTION_AG_VECTOR)
-                    .add(data)
-                    .addOnCompleteListener {
-                        onCompleteListener?.onComplete(it)
-                    }
-            }
-
-            is ILocation -> {
-                db.collection(COLLECTION_LOCATION)
-                    .add(data)
-                    .addOnCompleteListener {
-                        onCompleteListener?.onComplete(it)
-                    }
-            }
-
-            else -> return
+        private val db: FirebaseFirestore = Firebase.firestore
+        private val settings = firestoreSettings {
+            cacheSizeBytes = FirebaseFirestoreSettings.CACHE_SIZE_UNLIMITED
+            isPersistenceEnabled = true
         }
     }
 
-    fun write(data: IPotholeDtected, onCompleteListener: OnCompleteListener<DocumentReference>) {
-        db.collection(COLLECTION_USERS)
+    init {
+        db.firestoreSettings = settings
+    }
+
+    fun write(data: IUserPothole, onCompleteListener: OnCompleteListener<DocumentReference>) {
+        db.collection(COLLECTION_DATA)
             .add(data)
             .addOnCompleteListener {
                 onCompleteListener.onComplete(it)
@@ -52,46 +41,15 @@ class CloudDatabaseUtil {
 
     }
 
-    fun writeAll(
-        data: List<IPotholeDtected>,
-        onCompleteListener: OnCompleteListener<DocumentReference>
+    fun read(
+        username: String,
+        onCompleteListener: OnCompleteListener<QuerySnapshot>
     ) {
-        data.forEach {
-            db.collection(COLLECTION_USERS)
-                .add(it)
-                .addOnCompleteListener {
-                    onCompleteListener.onComplete(it)
-                }
-        }
-    }
-
-    fun readAll(onCompleteListener: OnCompleteListener<QuerySnapshot>) {
-        db.collection(COLLECTION_AG_VECTOR)
+        db.collection(COLLECTION_DATA)
+            .whereEqualTo("username", username)
             .get()
             .addOnCompleteListener {
                 onCompleteListener.onComplete(it)
             }
-    }
-
-    fun readAll(collectionName: String, onCompleteListener: OnCompleteListener<QuerySnapshot>) {
-        when (collectionName) {
-            COLLECTION_AG_VECTOR -> {
-                db.collection(COLLECTION_AG_VECTOR)
-                    .get()
-                    .addOnCompleteListener {
-                        onCompleteListener.onComplete(it)
-                    }
-            }
-
-            COLLECTION_LOCATION -> {
-                db.collection(COLLECTION_LOCATION)
-                    .get()
-                    .addOnCompleteListener {
-                        onCompleteListener.onComplete(it)
-                    }
-            }
-
-            else -> return
-        }
     }
 }

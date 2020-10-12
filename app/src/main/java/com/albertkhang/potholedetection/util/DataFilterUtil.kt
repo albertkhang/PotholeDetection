@@ -3,27 +3,31 @@ package com.albertkhang.potholedetection.util
 import android.content.Context
 import android.util.Log
 import com.albertkhang.potholedetection.model.IVector3D
-import com.albertkhang.potholedetection.model.IPotholeDtected
+import com.albertkhang.potholedetection.model.IPothole
+import com.albertkhang.potholedetection.model.IUserPothole
 import com.albertkhang.potholedetection.model.database.IAGVector
 import com.albertkhang.potholedetection.model.database.IDatabase
 import com.albertkhang.potholedetection.model.database.ILocation
+import com.google.gson.Gson
 import java.util.*
 
 class DataFilterUtil {
     companion object {
         private const val TAG = "DataFilterUtil"
+        private const val showLog = true
 
         private const val minSpeed = 1.38889 // m/s = 5 km/h
+        private const val isDeleteCacheFile = true // default: true
+        private const val isWriteFilteredCacheFile = false // default: false
 
         private val mCloudDatabaseUtil = CloudDatabaseUtil()
 
-        private fun read(context: Context, type: String, hour: Int): List<IDatabase> {
+        private fun read(context: Context, type: String): List<IDatabase> {
             when (type) {
                 LocalDatabaseUtil.CACHE_AG_FILE_NAME -> {
                     return LocalDatabaseUtil.read(
                         context,
-                        LocalDatabaseUtil.CACHE_AG_FILE_NAME,
-                        hour, LocalDatabaseUtil.CACHE_AG_FILE_NAME
+                        LocalDatabaseUtil.CACHE_AG_FILE_NAME, LocalDatabaseUtil.CACHE_AG_FILE_NAME
                     )
                 }
 
@@ -31,7 +35,7 @@ class DataFilterUtil {
                     return LocalDatabaseUtil.read(
                         context,
                         LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME,
-                        hour, LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME
+                        LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME
                     )
                 }
 
@@ -42,16 +46,26 @@ class DataFilterUtil {
         // Filter level 1
         fun run(context: Context) {
             Thread {
-                Log.d(
-                    TAG,
-                    "start filter minute=${
-                        Calendar.getInstance().get(Calendar.MINUTE)
-                    }, second=${Calendar.getInstance().get(Calendar.SECOND)}"
-                )
+                if (showLog)
+                    Log.d(
+                        TAG,
+                        "start filter minute=${
+                            Calendar.getInstance().get(Calendar.MINUTE)
+                        }, second=${Calendar.getInstance().get(Calendar.SECOND)}"
+                    )
 
-                val ag = read(context, LocalDatabaseUtil.CACHE_AG_FILE_NAME, 13) as List<IAGVector>
+                // read IAGVector data from cache file
+                val ag = read(context, LocalDatabaseUtil.CACHE_AG_FILE_NAME) as List<IAGVector>
+                if (ag.isEmpty()) {
+                    return@Thread
+                }
+
+                // read ILocation data from cache file
                 val l =
-                    read(context, LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME, 13) as List<ILocation>
+                    read(context, LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME) as List<ILocation>
+                if (l.isEmpty()) {
+                    return@Thread
+                }
 
                 // remove AGVector Redundant
                 // ================================================================
@@ -74,33 +88,62 @@ class DataFilterUtil {
 
                 val mixed = getMixedData(agVector, location)
 
-                val potholeDetecteds = filter(mixed)
+                val data = filter(mixed)
+                if (data.isNotEmpty()) {
+                    // convert data to json before upload
+                    val userPothole = IUserPothole("albertkhang", Gson().toJson(data.toArray()))
 
-                mCloudDatabaseUtil.write(
-                    potholeDetecteds.get(0)
-                ) {
-                    Log.d(TAG, "Uploaded done!")
+                    // Upload data to firebase
+                    mCloudDatabaseUtil.write(
+                        userPothole
+                    ) {
+                        if (showLog) {
+                            Log.d(TAG, "Uploaded ${it.result}")
+                        }
+                    }
+
+                    // Delete cache files after upload
+                    if (showLog)
+                        if (isDeleteCacheFile) {
+                            if (LocalDatabaseUtil.deleteAllCacheFile(context)) {
+                                Log.d(TAG, "Deleted cache files success.")
+                            } else {
+                                Log.d(TAG, "Deleted cache files error.")
+                            }
+                        }
+
+                    // be used for test
+                    if (isWriteFilteredCacheFile) {
+                        writeCacheFile(context, data)
+                    }
+                } else {
+                    if (showLog)
+                        Log.d(TAG, "Data is empty. Not upload!")
                 }
-
-
-
-                // Wrtie to cache file
-//                if (potholeDetecteds.isNotEmpty()) {
-//                    if (LocalDatabaseUtil.writeFilteredList(context, potholeDetecteds.toList())) {
-//                        Log.d(TAG, "filter done")
-//                    } else {
-//                        Log.d(TAG, "write filter error")
-//                    }
-//                }
             }.start()
         }
 
-        private fun filter(mixed: LinkedList<IDatabase>): LinkedList<IPotholeDtected> {
+        /**
+         * Be used for test
+         */
+        private fun writeCacheFile(context: Context, data: LinkedList<IPothole>) {
+            if (data.isNotEmpty()) {
+                if (LocalDatabaseUtil.writeFilteredList(context, data.toList())) {
+                    if (showLog)
+                        Log.d(TAG, "write filter done")
+                } else {
+                    if (showLog)
+                        Log.d(TAG, "write filter error")
+                }
+            }
+        }
+
+        private fun filter(mixed: LinkedList<IDatabase>): LinkedList<IPothole> {
             var start: ILocation = mixed.first as ILocation
             mixed.removeFirst()
 
             val tempIRI = LinkedList<Float>()
-            val tempUpload = LinkedList<IPotholeDtected>()
+            val tempUpload = LinkedList<IPothole>()
 
             while (mixed.isNotEmpty()) {
                 if (mixed.first is IAGVector) {
@@ -126,7 +169,7 @@ class DataFilterUtil {
                     // add vào tempUpload
                     if (averageSpeed >= minSpeed) {
                         tempUpload.add(
-                            IPotholeDtected(
+                            IPothole(
                                 start.latLng,
                                 end.latLng,
                                 iri,

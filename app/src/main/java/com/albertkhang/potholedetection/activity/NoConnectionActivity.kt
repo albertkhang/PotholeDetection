@@ -97,14 +97,12 @@ class NoConnectionActivity : AppCompatActivity() {
         // show data size added
         val agDatas = LocalDatabaseUtil.read(
             this,
-            LocalDatabaseUtil.CACHE_AG_FILE_NAME,
-            13, LocalDatabaseUtil.CACHE_AG_FILE_NAME
+            LocalDatabaseUtil.CACHE_AG_FILE_NAME, LocalDatabaseUtil.CACHE_AG_FILE_NAME
         ) as List<IAGVector>
 
         val locationDatas = LocalDatabaseUtil.read(
             this,
-            LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME,
-            13, LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME
+            LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME, LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME
         ) as List<ILocation>
 
         val agSize = agDatas.size

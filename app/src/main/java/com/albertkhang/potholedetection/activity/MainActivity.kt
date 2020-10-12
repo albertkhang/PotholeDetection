@@ -17,9 +17,8 @@ import androidx.core.content.ContextCompat
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.animation.AlphaAnimation
 import com.albertkhang.potholedetection.broadcast.NetworkChangeReceiver
-import com.albertkhang.potholedetection.model.IPotholeDtected
+import com.albertkhang.potholedetection.model.IPothole
 import com.albertkhang.potholedetection.model.database.IAGVector
-import com.albertkhang.potholedetection.model.database.IDatabase
 import com.albertkhang.potholedetection.model.database.ILocation
 import com.albertkhang.potholedetection.util.*
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -29,14 +28,9 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
-import com.google.android.gms.tasks.OnCompleteListener
-import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.firestore.DocumentReference
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_main.*
-import java.io.File
-import java.io.FileReader
 
 @SuppressLint("MissingPermission")
 // Checked permissions before go to this activity
@@ -60,26 +54,39 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         addControl()
         addEvent()
-
-        // read all data from cloud db
-//        readAll()
-
-//        DataFilterUtil.run(this)
     }
 
-    private fun addLines() {
-        val datas = LocalDatabaseUtil.readCurrentPotholeDetectedFile(this)
+    private fun onMapReady() {
+        onAddLinesReady {
+            root_view.removeView(mPreparingMapProgress)
+        }
+    }
 
-        datas.forEach {
-            val polyline = mMap.addPolyline(
-                PolylineOptions()
-                    .add(it.startLatLng)
-                    .add(it.endLatLng)
-            )
+    private fun onAddLinesReady(objects: () -> Unit) {
+        mCloudDatabaseUtil.read("albertkhang") {
+            Log.d(TAG, "${it.result}")
+            if (it.isSuccessful) {
+                val documents = it.result.documents
+                documents.forEach {
+//                    val username = it.data!!.get("username")
+                    val s = it.data!!["data"] as String
+                    val data = Gson().fromJson(s, Array<IPothole>::class.java)
 
-            polyline.tag = it.quality
+                    data.forEach {
+                        val polyline = mMap.addPolyline(
+                            PolylineOptions()
+                                .add(it.startLatLng)
+                                .add(it.endLatLng)
+                        )
 
-            stylePolyline(polyline)
+                        polyline.tag = it.quality
+
+                        stylePolyline(polyline)
+                    }
+                }
+
+                objects.invoke()
+            }
         }
     }
 
@@ -123,44 +130,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    private fun writeData(data: IDatabase) {
-        mCloudDatabaseUtil.write(data) { documentReference ->
-            if (documentReference.isComplete) {
-                Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference.result.id}")
-                Toast.makeText(this@MainActivity, "Add Success", Toast.LENGTH_SHORT).show()
-            } else {
-                Log.e(TAG, "Error adding document", documentReference.exception)
-                Toast.makeText(this@MainActivity, "Add Failure", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    private fun readAll() {
-        mCloudDatabaseUtil.readAll(
-            CloudDatabaseUtil.COLLECTION_AG_VECTOR
-        ) { task ->
-            if (task.isSuccessful) {
-                for (document in task.result) {
-                    Log.d(TAG, "${document.id} => ${document.data}")
-                }
-            } else {
-                Log.e(TAG, "Error getting documents.", task.exception)
-            }
-        }
-
-        mCloudDatabaseUtil.readAll(
-            CloudDatabaseUtil.COLLECTION_LOCATION
-        ) { task ->
-            if (task.isSuccessful) {
-                for (document in task.result) {
-                    Log.d(TAG, "${document.id} => ${document.data}")
-                }
-            } else {
-                Log.w(TAG, "Error getting documents.", task.exception)
-            }
-        }
-    }
-
     private fun addEvent() {
         btnMyLocation.setOnClickListener {
             moveToMyLocation()
@@ -173,14 +142,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             }
 
             addLegendView()
-        }
-
-        btnMyLocation.setOnLongClickListener {
-            if (SettingsUtil.isDebugVersion) {
-                addLines()
-            }
-
-            true
         }
     }
 
@@ -196,14 +157,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     // show data size added
                     val agDatas = LocalDatabaseUtil.read(
                         this,
-                        LocalDatabaseUtil.CACHE_AG_FILE_NAME,
-                        13, LocalDatabaseUtil.CACHE_AG_FILE_NAME
+                        LocalDatabaseUtil.CACHE_AG_FILE_NAME, LocalDatabaseUtil.CACHE_AG_FILE_NAME
                     ) as List<IAGVector>
 
                     val locationDatas = LocalDatabaseUtil.read(
                         this,
                         LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME,
-                        13, LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME
+                        LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME
                     ) as List<ILocation>
 
                     Toast.makeText(
@@ -381,7 +341,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.setOnCameraMoveListener { removeLegendView() }
         mMap.setOnMapClickListener { removeLegendView() }
         mMap.setOnMapLoadedCallback {
-            root_view.removeView(mPreparingMapProgress)
+            onMapReady()
         }
     }
 

@@ -30,18 +30,12 @@ class DetectingNotification : Service() {
     companion object {
         private const val CHANNEL_ID = "DetectingNotificationId"
         private const val TAG = "DetectingNotification"
-        private const val isLogData = false
+        private const val showLog = false
 
         private var isRunning = false
 
         private const val ACTION_STOP_SERVICE =
             "com.albertkhang.potholedetection.notification.stopservice"
-
-        private val minLocalWriteIRI =
-            LocalDatabaseUtil.readSettings()!!.detectNotification.minLocalWriteIRI
-
-        private val minLocalWriteSpeed =
-            LocalDatabaseUtil.readSettings()!!.detectNotification.minLocalWriteSpeed
 
         /**
          * Using for check the notification is starting or stopping
@@ -107,17 +101,22 @@ class DetectingNotification : Service() {
             val mainHandler = Handler(Looper.getMainLooper())
             val uploadTimeInterval = LocalDatabaseUtil.readSettings()!!.uploadDataInterval
 
-            val min = Calendar.getInstance().get(Calendar.MINUTE)
-            val sec = Calendar.getInstance().get(Calendar.SECOND)
-            Log.d(TAG, "uploaded min=$min, sec=$sec")
+            if (showLog) {
+                val min = Calendar.getInstance().get(Calendar.MINUTE)
+                val sec = Calendar.getInstance().get(Calendar.SECOND)
+                Log.d(TAG, "uploaded min=$min, sec=$sec")
+            }
 
             mainHandler.postDelayed(object : Runnable {
                 override fun run() {
                     if (isRunning) {
-//                        DataFilterUtil.run(context)
-                        val min = Calendar.getInstance().get(Calendar.MINUTE)
-                        val sec = Calendar.getInstance().get(Calendar.SECOND)
-                        Log.d(TAG, "uploaded min=$min, sec=$sec")
+                        if (showLog) {
+                            val min = Calendar.getInstance().get(Calendar.MINUTE)
+                            val sec = Calendar.getInstance().get(Calendar.SECOND)
+                            Log.d(TAG, "uploaded min=$min, sec=$sec")
+                        }
+
+                        DataFilterUtil.run(context)
                         mainHandler.postDelayed(this, uploadTimeInterval)
                     }
                 }

@@ -11,10 +11,4 @@ class DetectNotificationSetting {
 
     @SerializedName("content_stop")
     var contentStop: String = "Dừng lun nà!"
-
-    @SerializedName("min_local_write_iri")
-    var minLocalWriteIRI: Float = 0.3f
-
-    @SerializedName("min_local_write_speed")
-    var minLocalWriteSpeed: Float = 1.38889f
 }

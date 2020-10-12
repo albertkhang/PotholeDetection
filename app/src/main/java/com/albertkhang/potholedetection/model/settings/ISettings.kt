@@ -15,12 +15,6 @@ class ISettings {
     @SerializedName("location")
     var location: ILocationSetting = ILocationSetting()
 
-    /**
-     * @unit millisecond
-     */
-    @SerializedName("raw_data_filter_interval")
-    var rawDataFilterInterval: Long = 1000 * 60 * 60 // hour
-
     @SerializedName("detect_notification")
     var detectNotification: DetectNotificationSetting = DetectNotificationSetting()
 
@@ -29,4 +23,7 @@ class ISettings {
      */
     @SerializedName("upload_data_interval")
     var uploadDataInterval: Long = 1000 * 60 * 60
+
+    @SerializedName("filter")
+    var filter: IFilter = IFilter()
 }

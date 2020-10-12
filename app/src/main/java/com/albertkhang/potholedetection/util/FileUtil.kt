@@ -3,7 +3,7 @@ package com.albertkhang.potholedetection.util
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
-import com.albertkhang.potholedetection.model.IPotholeDtected
+import com.albertkhang.potholedetection.model.IPothole
 import com.albertkhang.potholedetection.model.database.IAGVector
 import com.albertkhang.potholedetection.model.database.IDatabase
 import com.albertkhang.potholedetection.model.database.ILocation
@@ -19,10 +19,13 @@ class FileUtil {
 
         private const val FILTERED_FOLDER = "filtered"
 
+        /**
+         * be used for test
+         */
         fun writeFilteredCache(
             context: Context,
             fileName: String,
-            IPotholeDtecteds: List<IPotholeDtected>
+            datas: List<IPothole>
         ): Boolean {
             try {
                 val folder = File("${context.externalCacheDir}/$FOLDER")
@@ -42,7 +45,7 @@ class FileUtil {
                 val bw = BufferedWriter(fileWriter)
                 val out = PrintWriter(bw)
 
-                IPotholeDtecteds.forEach {
+                datas.forEach {
                     out.println(Gson().toJson(it))
                 }
 
@@ -57,7 +60,10 @@ class FileUtil {
             }
         }
 
-        fun readFilteredCache(context: Context, fileName: String): List<IPotholeDtected> {
+        /**
+         * be used for test
+         */
+        fun readFilteredCache(context: Context, fileName: String): List<IPothole> {
             val folder = File("${context.externalCacheDir}/$FOLDER")
             folder.mkdirs()
 
@@ -72,10 +78,10 @@ class FileUtil {
 
             val fileReader = FileReader(f)
             val dataString = fileReader.readLines()
-            val datas = ArrayList<IPotholeDtected>()
+            val datas = ArrayList<IPothole>()
 
             dataString.forEach {
-                datas.add(Gson().fromJson(it, IPotholeDtected::class.java))
+                datas.add(Gson().fromJson(it, IPothole::class.java))
             }
 
             fileReader.close()
@@ -162,6 +168,34 @@ class FileUtil {
                 Log.e(TAG, e.message.toString())
                 return false
             }
+        }
+
+        fun deleteAllCacheFile(context: Context): Boolean {
+            try {
+                val folder = File("${context.externalCacheDir}/$FOLDER")
+                folder.mkdirs()
+
+                val agName = LocalDatabaseUtil.CACHE_AG_FILE_NAME
+                val locationName = LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME
+
+                val f1 = File("${context.externalCacheDir}/$FOLDER/$agName$POSTFIX")
+                val f2 = File("${context.externalCacheDir}/$FOLDER/$locationName$POSTFIX")
+
+                if (f1.exists()) {
+                    f1.delete()
+                }
+
+                if (f2.exists()) {
+                    f2.delete()
+                }
+
+                return true
+            } catch (e: Exception) {
+                Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
+                Log.e(TAG, e.message.toString())
+            }
+
+            return false
         }
     }
 }
