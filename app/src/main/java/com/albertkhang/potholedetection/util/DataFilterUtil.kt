@@ -15,6 +15,8 @@ class DataFilterUtil {
 
         private const val minSpeed = 1.38889 // m/s = 5 km/h
 
+        private val mCloudDatabaseUtil = CloudDatabaseUtil()
+
         private fun read(context: Context, type: String, hour: Int): List<IDatabase> {
             when (type) {
                 LocalDatabaseUtil.CACHE_AG_FILE_NAME -> {
@@ -40,7 +42,12 @@ class DataFilterUtil {
         // Filter level 1
         fun run(context: Context) {
             Thread {
-                Log.d(TAG, "start filter")
+                Log.d(
+                    TAG,
+                    "start filter minute=${
+                        Calendar.getInstance().get(Calendar.MINUTE)
+                    }, second=${Calendar.getInstance().get(Calendar.SECOND)}"
+                )
 
                 val ag = read(context, LocalDatabaseUtil.CACHE_AG_FILE_NAME, 13) as List<IAGVector>
                 val l =
@@ -69,13 +76,22 @@ class DataFilterUtil {
 
                 val potholeDetecteds = filter(mixed)
 
-                if (potholeDetecteds.isNotEmpty()) {
-                    if (LocalDatabaseUtil.writeFilteredList(context, potholeDetecteds.toList())) {
-                        Log.d(TAG, "filter done")
-                    } else {
-                        Log.d(TAG, "write filter error")
-                    }
+                mCloudDatabaseUtil.write(
+                    potholeDetecteds.get(0)
+                ) {
+                    Log.d(TAG, "Uploaded done!")
                 }
+
+
+
+                // Wrtie to cache file
+//                if (potholeDetecteds.isNotEmpty()) {
+//                    if (LocalDatabaseUtil.writeFilteredList(context, potholeDetecteds.toList())) {
+//                        Log.d(TAG, "filter done")
+//                    } else {
+//                        Log.d(TAG, "write filter error")
+//                    }
+//                }
             }.start()
         }
 

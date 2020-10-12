@@ -8,7 +8,9 @@ import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
@@ -19,13 +21,18 @@ import com.albertkhang.potholedetection.model.database.IAGVector
 import com.albertkhang.potholedetection.model.database.ILocation
 import com.albertkhang.potholedetection.sensor.AccelerometerSensor
 import com.albertkhang.potholedetection.sensor.LocationSensor
+import com.albertkhang.potholedetection.util.DataFilterUtil
 import com.albertkhang.potholedetection.util.LocalDatabaseUtil
+import com.albertkhang.potholedetection.util.SettingsUtil
+import java.util.*
 
 class DetectingNotification : Service() {
     companion object {
         private const val CHANNEL_ID = "DetectingNotificationId"
         private const val TAG = "DetectingNotification"
         private const val isLogData = false
+
+        private var isRunning = false
 
         private const val ACTION_STOP_SERVICE =
             "com.albertkhang.potholedetection.notification.stopservice"
@@ -95,9 +102,31 @@ class DetectingNotification : Service() {
             mAccelerometerSensor.start()
             mLocationSensor.start()
             isStarted = true
+
+            isRunning = true
+            val mainHandler = Handler(Looper.getMainLooper())
+            val uploadTimeInterval = LocalDatabaseUtil.readSettings()!!.uploadDataInterval
+
+            val min = Calendar.getInstance().get(Calendar.MINUTE)
+            val sec = Calendar.getInstance().get(Calendar.SECOND)
+            Log.d(TAG, "uploaded min=$min, sec=$sec")
+
+            mainHandler.postDelayed(object : Runnable {
+                override fun run() {
+                    if (isRunning) {
+//                        DataFilterUtil.run(context)
+                        val min = Calendar.getInstance().get(Calendar.MINUTE)
+                        val sec = Calendar.getInstance().get(Calendar.SECOND)
+                        Log.d(TAG, "uploaded min=$min, sec=$sec")
+                        mainHandler.postDelayed(this, uploadTimeInterval)
+                    }
+                }
+            }, uploadTimeInterval)
         }
 
+
         fun stopService(context: Context) {
+            isRunning = false
             val stopIntent = Intent(context, DetectingNotification::class.java)
             context.stopService(stopIntent)
         }
@@ -111,29 +140,13 @@ class DetectingNotification : Service() {
         super.onDestroy()
     }
 
-//    private val mainHandler = Handler(Looper.getMainLooper())
-//
-////    private var isRunning = false
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         // do heavy work on a background thread
         createNotificationChannel()
         initAndStartNotification()
 
-        // TODO: Có thể xử lý filter data trong này
-
-//        isRunning = true
-//        mainHandler.post(object : Runnable {
-//            override fun run() {
-//                if (isRunning) {
-//                    DataFilterUtil.filter()
-//                    mainHandler.postDelayed(this, 1000)
-//                }
-//            }
-//        })
-
         if (intent?.getStringExtra("action").equals(ACTION_STOP_SERVICE)) {
-//            isRunning = false
+            isRunning = false
             stopSelf()
         }
 

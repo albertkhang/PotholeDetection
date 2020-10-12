@@ -1,5 +1,6 @@
 package com.albertkhang.potholedetection.util
 
+import com.albertkhang.potholedetection.model.IPotholeDtected
 import com.albertkhang.potholedetection.model.database.IAGVector
 import com.albertkhang.potholedetection.model.database.IDatabase
 import com.albertkhang.potholedetection.model.database.ILocation
@@ -17,6 +18,7 @@ class CloudDatabaseUtil {
     companion object {
         const val COLLECTION_AG_VECTOR = "ag-vector"
         const val COLLECTION_LOCATION = "location"
+        const val COLLECTION_USERS = "data"
     }
 
     fun write(data: IDatabase, onCompleteListener: OnCompleteListener<DocumentReference>?) {
@@ -39,6 +41,36 @@ class CloudDatabaseUtil {
 
             else -> return
         }
+    }
+
+    fun write(data: IPotholeDtected, onCompleteListener: OnCompleteListener<DocumentReference>) {
+        db.collection(COLLECTION_USERS)
+            .add(data)
+            .addOnCompleteListener {
+                onCompleteListener.onComplete(it)
+            }
+
+    }
+
+    fun writeAll(
+        data: List<IPotholeDtected>,
+        onCompleteListener: OnCompleteListener<DocumentReference>
+    ) {
+        data.forEach {
+            db.collection(COLLECTION_USERS)
+                .add(it)
+                .addOnCompleteListener {
+                    onCompleteListener.onComplete(it)
+                }
+        }
+    }
+
+    fun readAll(onCompleteListener: OnCompleteListener<QuerySnapshot>) {
+        db.collection(COLLECTION_AG_VECTOR)
+            .get()
+            .addOnCompleteListener {
+                onCompleteListener.onComplete(it)
+            }
     }
 
     fun readAll(collectionName: String, onCompleteListener: OnCompleteListener<QuerySnapshot>) {

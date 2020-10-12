@@ -24,6 +24,9 @@ class ISettings {
     @SerializedName("detect_notification")
     var detectNotification: DetectNotificationSetting = DetectNotificationSetting()
 
-    @SerializedName("iri_format")
-    var iriFormat: String = "#.##"
+    /**
+     * @unit millisecond
+     */
+    @SerializedName("upload_data_interval")
+    var uploadDataInterval: Long = 1000 * 60 * 60
 }

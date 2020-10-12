@@ -29,7 +29,10 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.firestore.DocumentReference
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
@@ -61,11 +64,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         // read all data from cloud db
 //        readAll()
 
-        DataFilterUtil.run(this)
+//        DataFilterUtil.run(this)
     }
 
     private fun addLines() {
         val datas = LocalDatabaseUtil.readCurrentPotholeDetectedFile(this)
+
         datas.forEach {
             val polyline = mMap.addPolyline(
                 PolylineOptions()
