@@ -1,7 +1,10 @@
 package com.albertkhang.potholedetection.activity
 
+import android.Manifest
 import android.animation.Animator
 import android.annotation.SuppressLint
+import android.app.AlertDialog
+import android.app.Dialog
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
@@ -9,10 +12,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.RelativeLayout
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.animation.AlphaAnimation
@@ -20,6 +22,7 @@ import com.albertkhang.potholedetection.broadcast.NetworkChangeReceiver
 import com.albertkhang.potholedetection.model.IPothole
 import com.albertkhang.potholedetection.model.database.IAGVector
 import com.albertkhang.potholedetection.model.database.ILocation
+import com.albertkhang.potholedetection.model.settings.ISettings
 import com.albertkhang.potholedetection.util.*
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -31,6 +34,9 @@ import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.dialog_one_button.*
+import kotlinx.android.synthetic.main.legend_popup.*
+import kotlinx.android.synthetic.main.legend_popup.title
 
 @SuppressLint("MissingPermission")
 // Checked permissions before go to this activity
@@ -134,6 +140,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         btnMyLocation.setOnClickListener {
             moveToMyLocation()
             removeLegendView()
+            showSettings()
         }
 
         btnLegend.setOnClickListener {
@@ -142,6 +149,23 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             }
 
             addLegendView()
+        }
+    }
+
+    private var settingsCount = 0
+
+    private fun showSettings() {
+        if (SettingsUtil.isDebugVersion) {
+            settingsCount++
+
+            if (settingsCount == 5) {
+                val builder = AlertDialog.Builder(this)
+                builder.setTitle("Settings")
+                builder.setMessage(LocalDatabaseUtil.readSettings().toString())
+                builder.show()
+
+                settingsCount = 0
+            }
         }
     }
 

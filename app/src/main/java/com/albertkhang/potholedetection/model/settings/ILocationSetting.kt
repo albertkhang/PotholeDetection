@@ -8,4 +8,9 @@ class ILocationSetting {
 
     @SerializedName("min_milliseconds_update")
     var minMillisecondsUpdate: Int = 1000
+    override fun toString(): String {
+        return "ILocationSetting(minMeterUpdate=$minMeterUpdate, minMillisecondsUpdate=$minMillisecondsUpdate)"
+    }
+
+
 }

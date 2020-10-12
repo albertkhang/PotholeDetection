@@ -1,5 +1,6 @@
 package com.albertkhang.potholedetection.model.settings
 
+import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 
 class ISettings {
@@ -26,4 +27,10 @@ class ISettings {
 
     @SerializedName("filter")
     var filter: IFilter = IFilter()
+
+    override fun toString(): String {
+        return "ISettings(version=$version, mapZoom=$mapZoom, sensorDelay=$sensorDelay, location=$location, detectNotification=$detectNotification, uploadDataInterval=$uploadDataInterval, filter=$filter)"
+    }
+
+
 }

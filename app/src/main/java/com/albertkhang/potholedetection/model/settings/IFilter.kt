@@ -11,4 +11,9 @@ class IFilter {
 
     @SerializedName("min_speed")
     val minSpeed: Float = 1.38889f
+    override fun toString(): String {
+        return "IFilter(averageMilestone=$averageMilestone, badMilestone=$badMilestone, minSpeed=$minSpeed)"
+    }
+
+
 }

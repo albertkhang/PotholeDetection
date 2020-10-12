@@ -11,4 +11,9 @@ class DetectNotificationSetting {
 
     @SerializedName("content_stop")
     var contentStop: String = "Dừng lun nà!"
+    override fun toString(): String {
+        return "DetectNotificationSetting(contentTitle='$contentTitle', contentText='$contentText', contentStop='$contentStop')"
+    }
+
+
 }
