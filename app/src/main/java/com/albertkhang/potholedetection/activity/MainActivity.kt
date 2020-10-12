@@ -2,7 +2,6 @@ package com.albertkhang.potholedetection.activity
 
 import android.animation.Animator
 import android.annotation.SuppressLint
-import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
@@ -18,7 +17,7 @@ import androidx.core.content.ContextCompat
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.animation.AlphaAnimation
 import com.albertkhang.potholedetection.broadcast.NetworkChangeReceiver
-import com.albertkhang.potholedetection.model.UploadData
+import com.albertkhang.potholedetection.model.IPotholeDtected
 import com.albertkhang.potholedetection.model.database.IAGVector
 import com.albertkhang.potholedetection.model.database.IDatabase
 import com.albertkhang.potholedetection.model.database.ILocation
@@ -62,33 +61,21 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         // read all data from cloud db
 //        readAll()
 
-        DataFilterUtil.filter(this)
+        DataFilterUtil.run(this)
     }
 
     private fun addLines() {
-        val f = File("${externalCacheDir}/potholedetection/tmp.txt")
-        if (f.exists()) {
-            val fileReader = FileReader(f)
-            val dataString = fileReader.readLines()
-            val datas = ArrayList<UploadData>()
+        val datas = LocalDatabaseUtil.readCurrentPotholeDetectedFile(this)
+        datas.forEach {
+            val polyline = mMap.addPolyline(
+                PolylineOptions()
+                    .add(it.startLatLng)
+                    .add(it.endLatLng)
+            )
 
-            dataString.forEach {
-                datas.add(Gson().fromJson(it, UploadData::class.java))
-            }
+            polyline.tag = it.quality
 
-            fileReader.close()
-
-            datas.forEach {
-                val polyline = mMap.addPolyline(
-                    PolylineOptions()
-                        .add(it.startLatLng)
-                        .add(it.endLatLng)
-                )
-
-                polyline.tag = it.quality
-
-                stylePolyline(polyline)
-            }
+            stylePolyline(polyline)
         }
     }
 

@@ -1,12 +1,11 @@
 package com.albertkhang.potholedetection.util
 
 import android.content.Context
-import android.util.Log
+import com.albertkhang.potholedetection.model.IPotholeDtected
 import com.albertkhang.potholedetection.model.database.IDatabase
 import com.albertkhang.potholedetection.model.settings.ISettings
 import io.paperdb.Paper
-import java.text.SimpleDateFormat
-import java.util.*
+import java.io.File
 
 class LocalDatabaseUtil {
     companion object {
@@ -17,6 +16,8 @@ class LocalDatabaseUtil {
         const val CACHE_AG_FILE_NAME = "cache_ag"
         const val CACHE_LOCATION_FILE_NAME = "cache_location"
 
+        const val CACHE_FILTERED_FILE_NAME = "cache_filtered"
+
         /**
          * Initial settings for release version
          */
@@ -26,23 +27,10 @@ class LocalDatabaseUtil {
             }
         }
 
-        // Filter level 2
-        // TODO: chạy ở background thread
-        //
-//        fun filter() {
-//            // TODO: Cứ mỗi 1h là tự update, không quan tâm hiện tại là mấy giờ
-//
-//            val year = Calendar.getInstance().get(Calendar.YEAR)
-//            val month = Calendar.getInstance().get(Calendar.MONTH) + 1
-//            val day = Calendar.getInstance().get(Calendar.DATE)
-//            val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-//
-//            val parseFormat = SimpleDateFormat("yyyyMMdd HH:MM")
-//            val s = parseFormat.format(Date())
-//
-////            Log.d(TAG, "$year$month${DecimalFormat("##").format(day)}$hour")
-//            Log.d(TAG, s)
-//        }
+        fun readCurrentPotholeDetectedFile(context: Context): List<IPotholeDtected> {
+            val currentHour = 13
+            return FileUtil.readFilteredCache(context, "${CACHE_FILTERED_FILE_NAME}_$currentHour")
+        }
 
         fun writeSettings(settings: ISettings) {
             if (SettingsUtil.isDebugVersion) {
@@ -63,10 +51,19 @@ class LocalDatabaseUtil {
         /**
          * Add new data at bottom of cache file
          */
-        fun add(context: Context, fileName: String, data: IDatabase) {
+        fun addRaw(context: Context, fileName: String, data: IDatabase) {
             val currentHour = 13
 
-            FileUtil.write(context, "${fileName}_$currentHour", data)
+            FileUtil.writeRaw(context, "${fileName}_$currentHour", data)
+        }
+
+        fun writeFilteredList(context: Context, data: List<IPotholeDtected>): Boolean {
+            val currentHour = 13
+            return FileUtil.writeFilteredCache(
+                context,
+                "${CACHE_FILTERED_FILE_NAME}_$currentHour",
+                data
+            )
         }
 
         /**

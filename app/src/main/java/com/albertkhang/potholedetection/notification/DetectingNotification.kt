@@ -20,7 +20,6 @@ import com.albertkhang.potholedetection.model.database.ILocation
 import com.albertkhang.potholedetection.sensor.AccelerometerSensor
 import com.albertkhang.potholedetection.sensor.LocationSensor
 import com.albertkhang.potholedetection.util.LocalDatabaseUtil
-import java.text.DecimalFormat
 
 class DetectingNotification : Service() {
     companion object {
@@ -59,7 +58,7 @@ class DetectingNotification : Service() {
                             tempAGVector.set(accelerometer, gravity)
                             tempAGVector.iri = iri
 
-                            LocalDatabaseUtil.add(
+                            LocalDatabaseUtil.addRaw(
                                 context,
                                 LocalDatabaseUtil.CACHE_AG_FILE_NAME,
                                 tempAGVector
@@ -77,7 +76,7 @@ class DetectingNotification : Service() {
                         tempLocation.set(location)
                         tempLocation.timestamps = System.currentTimeMillis()
 
-                        LocalDatabaseUtil.add(
+                        LocalDatabaseUtil.addRaw(
                             context,
                             LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME,
                             tempLocation

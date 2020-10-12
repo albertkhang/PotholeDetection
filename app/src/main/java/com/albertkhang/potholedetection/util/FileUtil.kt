@@ -3,6 +3,7 @@ package com.albertkhang.potholedetection.util
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import com.albertkhang.potholedetection.model.IPotholeDtected
 import com.albertkhang.potholedetection.model.database.IAGVector
 import com.albertkhang.potholedetection.model.database.IDatabase
 import com.albertkhang.potholedetection.model.database.ILocation
@@ -16,8 +17,73 @@ class FileUtil {
         private const val POSTFIX = ".txt"
         private const val FOLDER = "potholedetection"
 
+        private const val FILTERED_FOLDER = "filtered"
 
-        fun write(context: Context, fileName: String, data: IDatabase): Boolean {
+        fun writeFilteredCache(
+            context: Context,
+            fileName: String,
+            IPotholeDtecteds: List<IPotholeDtected>
+        ): Boolean {
+            try {
+                val folder = File("${context.externalCacheDir}/$FOLDER")
+                folder.mkdirs()
+
+                val cacheFolder = File("${context.externalCacheDir}/$FOLDER/$FILTERED_FOLDER")
+                cacheFolder.mkdirs()
+
+                val f =
+                    File("${context.externalCacheDir}/$FOLDER/$FILTERED_FOLDER/$fileName$POSTFIX")
+                if (!f.exists()) {
+                    f.createNewFile()
+                }
+
+                val fileWriter = FileWriter(f, true)
+
+                val bw = BufferedWriter(fileWriter)
+                val out = PrintWriter(bw)
+
+                IPotholeDtecteds.forEach {
+                    out.println(Gson().toJson(it))
+                }
+
+                out.close()
+                fileWriter.close()
+
+                return true
+            } catch (e: Exception) {
+                Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
+                Log.e(TAG, e.message.toString())
+                return false
+            }
+        }
+
+        fun readFilteredCache(context: Context, fileName: String): List<IPotholeDtected> {
+            val folder = File("${context.externalCacheDir}/$FOLDER")
+            folder.mkdirs()
+
+            val cacheFolder = File("${context.externalCacheDir}/$FOLDER/$FILTERED_FOLDER")
+            cacheFolder.mkdirs()
+
+            val f =
+                File("${context.externalCacheDir}/$FOLDER/$FILTERED_FOLDER/$fileName$POSTFIX")
+            if (!f.exists()) {
+                return emptyList()
+            }
+
+            val fileReader = FileReader(f)
+            val dataString = fileReader.readLines()
+            val datas = ArrayList<IPotholeDtected>()
+
+            dataString.forEach {
+                datas.add(Gson().fromJson(it, IPotholeDtected::class.java))
+            }
+
+            fileReader.close()
+
+            return datas
+        }
+
+        fun writeRaw(context: Context, fileName: String, data: IDatabase): Boolean {
             // TODO: can optimize here
 
             try {
