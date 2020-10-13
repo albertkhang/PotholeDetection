@@ -54,17 +54,30 @@ class DataFilterUtil {
                         }, second=${Calendar.getInstance().get(Calendar.SECOND)}"
                     )
 
+                var isCacheEmpty = false
+
                 // read IAGVector data from cache file
                 val ag = read(context, LocalDatabaseUtil.CACHE_AG_FILE_NAME) as List<IAGVector>
                 if (ag.isEmpty()) {
-                    return@Thread
+                    isCacheEmpty = true
                 }
 
                 // read ILocation data from cache file
                 val l =
                     read(context, LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME) as List<ILocation>
+
                 if (l.isEmpty()) {
+                    isCacheEmpty = true
+                }
+
+                if (isCacheEmpty) {
+                    if (showLog)
+                        Log.d(TAG, "Cache file is empty, return thread.")
+
                     return@Thread
+                } else {
+                    if (showLog)
+                        Log.d(TAG, "Read cache file.")
                 }
 
                 // remove AGVector Redundant
@@ -84,42 +97,66 @@ class DataFilterUtil {
                     agVector
                 )
 
+                if (showLog)
+                    Log.d(TAG, "remove AG Vector Redundant")
+
                 // now | firstLocationTimestamp < list IAGVector < lastLocationTimestamp |
 
                 val mixed = getMixedData(agVector, location)
 
                 val data = filter(mixed)
+
+                if (showLog)
+                    Log.d(TAG, "filtered")
+
                 if (data.isNotEmpty()) {
-                    // convert data to json before upload
-                    val userPothole = IUserPothole("albertkhang", Gson().toJson(data.toArray()))
+                    if (NetworkUtil.isNetworkAvailable(context)) {
+                        Log.d(TAG, "Network available. Preparing to upload.")
 
-                    // Upload data to firebase
-                    mCloudDatabaseUtil.write(
-                        userPothole
-                    ) {
-                        if (showLog) {
-                            Log.d(TAG, "Uploaded ${it.result}")
-                        }
-                    }
+                        // convert data to json before upload
+                        val userPothole = IUserPothole("albertkhang", Gson().toJson(data.toArray()))
 
-                    // Delete cache files after upload
-                    if (showLog)
-                        if (isDeleteCacheFile) {
-                            if (LocalDatabaseUtil.deleteAllCacheFile(context)) {
-                                Log.d(TAG, "Deleted cache files success.")
-                            } else {
-                                Log.d(TAG, "Deleted cache files error.")
+                        // Upload data to firebase
+                        mCloudDatabaseUtil.write(
+                            userPothole
+                        ) {
+                            if (showLog) {
+                                Log.d(TAG, "Uploaded ${it.result}")
                             }
                         }
 
-                    // be used for test
-                    if (isWriteFilteredCacheFile) {
+                        // Delete cache files after upload
+                        if (showLog)
+                            if (isDeleteCacheFile) {
+                                if (LocalDatabaseUtil.deleteAllCacheFile(context)) {
+                                    Log.d(TAG, "Deleted cache files success.")
+                                } else {
+                                    Log.d(TAG, "Deleted cache files error.")
+                                }
+                            }
+
+                        // be used for test
+                        if (isWriteFilteredCacheFile) {
+                            writeCacheFile(context, data)
+                        }
+                    } else {
+                        Log.d(TAG, "Network unavailable. Write to filter cache file.")
+
+                        // TODO: lưu dữ liệu xuống nếu không có mạng, khi có mạng thì upload sau
+                        // TODO: xử lý netowrk status listener bên DetectingNotification
                         writeCacheFile(context, data)
                     }
                 } else {
                     if (showLog)
                         Log.d(TAG, "Data is empty. Not upload!")
                 }
+
+                data.clear()
+                mixed.clear()
+                location.clear()
+                agVector.clear()
+
+                Log.d(TAG, "thread=${Thread.currentThread()} done.")
             }.start()
         }
 

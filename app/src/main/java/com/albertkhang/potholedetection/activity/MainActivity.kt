@@ -37,6 +37,8 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.dialog_one_button.*
 import kotlinx.android.synthetic.main.legend_popup.*
 import kotlinx.android.synthetic.main.legend_popup.title
+import java.text.SimpleDateFormat
+import java.util.*
 
 @SuppressLint("MissingPermission")
 // Checked permissions before go to this activity
@@ -70,7 +72,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun onAddLinesReady(objects: () -> Unit) {
         mCloudDatabaseUtil.read("albertkhang") {
-            Log.d(TAG, "${it.result}")
             if (it.isSuccessful) {
                 val documents = it.result.documents
                 documents.forEach {
@@ -79,6 +80,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     val data = Gson().fromJson(s, Array<IPothole>::class.java)
 
                     data.forEach {
+                        // set min speed = 2.77778 m/s = 10 km/h
                         val polyline = mMap.addPolyline(
                             PolylineOptions()
                                 .add(it.startLatLng)

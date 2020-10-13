@@ -1,10 +1,13 @@
 package com.albertkhang.potholedetection.util
 
 import android.content.Context
+import android.util.Log
 import com.albertkhang.potholedetection.model.IPothole
 import com.albertkhang.potholedetection.model.database.IDatabase
 import com.albertkhang.potholedetection.model.settings.ISettings
 import io.paperdb.Paper
+import java.text.SimpleDateFormat
+import java.util.*
 
 class LocalDatabaseUtil {
     companion object {
@@ -14,8 +17,6 @@ class LocalDatabaseUtil {
 
         const val CACHE_AG_FILE_NAME = "cache_ag"
         const val CACHE_LOCATION_FILE_NAME = "cache_location"
-
-        const val CACHE_FILTERED_FILE_NAME = "cache_filtered"
 
         /**
          * Initial settings for release version
@@ -50,9 +51,13 @@ class LocalDatabaseUtil {
         }
 
         fun writeFilteredList(context: Context, data: List<IPothole>): Boolean {
+            val sdf = SimpleDateFormat("yyyyMMdd_HHmm")
+            val currentHour = sdf.format(Date())
+//            Log.d(TAG,"$currentDate")
+
             return FileUtil.writeFilteredCache(
                 context,
-                CACHE_FILTERED_FILE_NAME,
+                currentHour,
                 data
             )
         }

@@ -101,21 +101,9 @@ class DetectingNotification : Service() {
             val mainHandler = Handler(Looper.getMainLooper())
             val uploadTimeInterval = LocalDatabaseUtil.readSettings()!!.uploadDataInterval
 
-            if (showLog) {
-                val min = Calendar.getInstance().get(Calendar.MINUTE)
-                val sec = Calendar.getInstance().get(Calendar.SECOND)
-                Log.d(TAG, "uploaded min=$min, sec=$sec")
-            }
-
             mainHandler.postDelayed(object : Runnable {
                 override fun run() {
                     if (isRunning) {
-                        if (showLog) {
-                            val min = Calendar.getInstance().get(Calendar.MINUTE)
-                            val sec = Calendar.getInstance().get(Calendar.SECOND)
-                            Log.d(TAG, "uploaded min=$min, sec=$sec")
-                        }
-
                         DataFilterUtil.run(context)
                         mainHandler.postDelayed(this, uploadTimeInterval)
                     }
