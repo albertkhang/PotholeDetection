@@ -17,14 +17,12 @@ import androidx.core.content.ContextCompat
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.activity.MainActivity
 import com.albertkhang.potholedetection.model.IVector3D
-import com.albertkhang.potholedetection.model.database.IAGVector
-import com.albertkhang.potholedetection.model.database.ILocation
+import com.albertkhang.potholedetection.model.local_database.IAGVector
+import com.albertkhang.potholedetection.model.local_database.ILocation
 import com.albertkhang.potholedetection.sensor.AccelerometerSensor
 import com.albertkhang.potholedetection.sensor.LocationSensor
 import com.albertkhang.potholedetection.util.DataFilterUtil
 import com.albertkhang.potholedetection.util.LocalDatabaseUtil
-import com.albertkhang.potholedetection.util.SettingsUtil
-import java.util.*
 
 class DetectingNotification : Service() {
     companion object {

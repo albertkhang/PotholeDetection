@@ -6,8 +6,8 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.albertkhang.potholedetection.R
-import com.albertkhang.potholedetection.model.database.IAGVector
-import com.albertkhang.potholedetection.model.database.ILocation
+import com.albertkhang.potholedetection.model.local_database.IAGVector
+import com.albertkhang.potholedetection.model.local_database.ILocation
 import com.albertkhang.potholedetection.util.LocalDatabaseUtil
 import com.albertkhang.potholedetection.util.NetworkUtil
 import com.albertkhang.potholedetection.util.SettingsUtil

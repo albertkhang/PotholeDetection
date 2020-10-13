@@ -3,11 +3,11 @@ package com.albertkhang.potholedetection.util
 import android.content.Context
 import android.util.Log
 import com.albertkhang.potholedetection.model.IVector3D
-import com.albertkhang.potholedetection.model.IPothole
-import com.albertkhang.potholedetection.model.IUserPothole
-import com.albertkhang.potholedetection.model.database.IAGVector
-import com.albertkhang.potholedetection.model.database.IDatabase
-import com.albertkhang.potholedetection.model.database.ILocation
+import com.albertkhang.potholedetection.model.cloud_database.IPothole
+import com.albertkhang.potholedetection.model.cloud_database.IUserPothole
+import com.albertkhang.potholedetection.model.local_database.IAGVector
+import com.albertkhang.potholedetection.model.local_database.IDatabase
+import com.albertkhang.potholedetection.model.local_database.ILocation
 import com.google.gson.Gson
 import java.util.*
 

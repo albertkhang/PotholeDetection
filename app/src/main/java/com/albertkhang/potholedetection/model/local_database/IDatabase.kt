@@ -1,4 +1,4 @@
-package com.albertkhang.potholedetection.model.database
+package com.albertkhang.potholedetection.model.local_database
 
 abstract class IDatabase {
 //    var userId: Int = userId

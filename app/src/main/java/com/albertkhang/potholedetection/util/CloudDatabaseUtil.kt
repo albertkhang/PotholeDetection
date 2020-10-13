@@ -1,11 +1,6 @@
 package com.albertkhang.potholedetection.util
 
-import android.util.Log
-import com.albertkhang.potholedetection.model.IPothole
-import com.albertkhang.potholedetection.model.IUserPothole
-import com.albertkhang.potholedetection.model.database.IAGVector
-import com.albertkhang.potholedetection.model.database.IDatabase
-import com.albertkhang.potholedetection.model.database.ILocation
+import com.albertkhang.potholedetection.model.cloud_database.IUserPothole
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore

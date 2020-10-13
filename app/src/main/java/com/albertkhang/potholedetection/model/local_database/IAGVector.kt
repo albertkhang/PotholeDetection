@@ -1,7 +1,6 @@
-package com.albertkhang.potholedetection.model.database
+package com.albertkhang.potholedetection.model.local_database
 
 import com.albertkhang.potholedetection.model.IVector3D
-import com.albertkhang.potholedetection.model.database.IDatabase
 
 class IAGVector() : IDatabase() {
     constructor(accelerometer: IVector3D, gravity: IVector3D) : this() {

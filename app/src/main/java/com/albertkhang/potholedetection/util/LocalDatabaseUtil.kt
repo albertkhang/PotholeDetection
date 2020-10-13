@@ -1,9 +1,8 @@
 package com.albertkhang.potholedetection.util
 
 import android.content.Context
-import android.util.Log
-import com.albertkhang.potholedetection.model.IPothole
-import com.albertkhang.potholedetection.model.database.IDatabase
+import com.albertkhang.potholedetection.model.cloud_database.IPothole
+import com.albertkhang.potholedetection.model.local_database.IDatabase
 import com.albertkhang.potholedetection.model.settings.ISettings
 import io.paperdb.Paper
 import java.text.SimpleDateFormat

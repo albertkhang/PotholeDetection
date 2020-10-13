@@ -1,4 +1,4 @@
-package com.albertkhang.potholedetection.model
+package com.albertkhang.potholedetection.model.cloud_database
 
 import com.albertkhang.potholedetection.util.LocalDatabaseUtil
 import com.google.android.gms.maps.model.LatLng
