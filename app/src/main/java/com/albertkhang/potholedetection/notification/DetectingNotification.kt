@@ -17,12 +17,12 @@ import androidx.core.content.ContextCompat
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.activity.MainActivity
 import com.albertkhang.potholedetection.model.IVector3D
-import com.albertkhang.potholedetection.model.local_database.IAGVector
-import com.albertkhang.potholedetection.model.local_database.ILocation
+import com.albertkhang.potholedetection.model.entry.AccelerometerEntry
+import com.albertkhang.potholedetection.model.entry.LocationEntry
 import com.albertkhang.potholedetection.sensor.AccelerometerSensor
 import com.albertkhang.potholedetection.sensor.LocationSensor
-import com.albertkhang.potholedetection.util.DataFilterUtil
-import com.albertkhang.potholedetection.util.LocalDatabaseUtil
+import com.albertkhang.potholedetection.util.*
+import com.google.android.gms.maps.model.LatLng
 
 class DetectingNotification : Service() {
     companion object {
@@ -43,45 +43,65 @@ class DetectingNotification : Service() {
         private lateinit var mAccelerometerSensor: AccelerometerSensor
         private lateinit var mLocationSensor: LocationSensor
 
-        private val tempAGVector = IAGVector()
-        private val tempLocation = ILocation()
-
         private fun initSensors(context: Context) {
-            mAccelerometerSensor =
-                object : AccelerometerSensor(context) {
-                    override fun onUpdate(accelerometer: IVector3D, gravity: IVector3D) {
-                        val iri = accelerometer.iri(gravity)
+            // the last time record speed > 10 km/h
+            var lastRecordTime = 0L
+            var isRecording = false
 
-                        if (tempAGVector.iri != iri && iri >= 0.05) {
-                            tempAGVector.timestamps = System.currentTimeMillis()
-                            tempAGVector.set(accelerometer, gravity)
-                            tempAGVector.iri = iri
+            // TODO: set setting this
+            // the interval before auto stop recording
+            val stopRecordingInterval = 1000 * 60 * 5 // 5 min
 
-                            LocalDatabaseUtil.addRaw(
-                                context,
-                                LocalDatabaseUtil.CACHE_AG_FILE_NAME,
-                                tempAGVector
-                            )
+            var lastIRI = 0f
 
-                            Log.i(TAG, tempAGVector.toString())
+            // TODO: set setting this
+            // When the phone does not move, iri < 0.05
+            val minIRI = 0.05
+
+            synchronized(isRecording) {
+                mAccelerometerSensor =
+                    object : AccelerometerSensor(context) {
+                        override fun onUpdate(accelerometer: IVector3D, gravity: IVector3D) {
+                            if (isRecording) {
+                                Log.d(TAG, "AccelerometerSensor onUpdate isRecording")
+                                val iri = IRIUtil.getIRI(accelerometer, gravity)
+                                if (iri != lastIRI && iri >= minIRI) {
+                                    FileUtil.writeAccelerometerCache(
+                                        context,
+                                        AccelerometerEntry(iri)
+                                    )
+                                    lastIRI = iri
+                                }
+                            }
                         }
                     }
 
-                }
+                mLocationSensor = object : LocationSensor(context) {
+                    override fun onUpdate(location: Location) {
+                        Log.d(TAG, "LocationSensor onUpdate")
 
-            mLocationSensor = object : LocationSensor(context) {
-                override fun onUpdate(location: Location) {
-                    if (tempLocation != ILocation(location)) {
-                        tempLocation.set(location)
-                        tempLocation.timestamps = System.currentTimeMillis()
+                        // TODO: set setting this
+                        val minSpeed = 2.77778 // m/s = 10 km/h
 
-                        LocalDatabaseUtil.addRaw(
-                            context,
-                            LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME,
-                            tempLocation
-                        )
+                        if (location.speed >= minSpeed) {
+                            Log.d(TAG, "location.speed >= minSpeed")
+                            lastRecordTime = System.currentTimeMillis()
+                            isRecording = true
+                        }
 
-                        Log.d(TAG, tempLocation.toString())
+                        if (System.currentTimeMillis() - lastRecordTime >= stopRecordingInterval) {
+                            Log.d(TAG, " >= stopRecordingInterval")
+                            isRecording = false
+                        } else if (isRecording) {
+                            Log.d(TAG, "isRecording")
+
+                            FileUtil.writeLocationCache(
+                                context, LocationEntry(
+                                    LatLng(location.latitude, location.longitude),
+                                    location.speed
+                                )
+                            )
+                        }
                     }
                 }
             }
@@ -108,7 +128,6 @@ class DetectingNotification : Service() {
                 }
             }, uploadTimeInterval)
         }
-
 
         fun stopService(context: Context) {
             isRunning = false

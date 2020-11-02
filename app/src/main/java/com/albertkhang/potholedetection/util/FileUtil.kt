@@ -4,9 +4,13 @@ import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import com.albertkhang.potholedetection.model.cloud_database.IPothole
+import com.albertkhang.potholedetection.model.entry.AccelerometerEntry
+import com.albertkhang.potholedetection.model.entry.LocationEntry
 import com.albertkhang.potholedetection.model.local_database.IAGVector
 import com.albertkhang.potholedetection.model.local_database.IDatabase
 import com.albertkhang.potholedetection.model.local_database.ILocation
+import com.albertkhang.potholedetection.util.LocalDatabaseUtil.Companion.CACHE_AG_FILE_NAME
+import com.albertkhang.potholedetection.util.LocalDatabaseUtil.Companion.CACHE_LOCATION_FILE_NAME
 import com.google.gson.Gson
 import java.io.*
 import java.lang.Exception
@@ -112,6 +116,61 @@ class FileUtil {
                 return true
             } catch (e: Exception) {
                 Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
+                Log.e(TAG, e.message.toString())
+                return false
+            }
+        }
+
+        fun writeLocationCache(context: Context, locationEntry: LocationEntry): Boolean {
+            try {
+                val folder = File("${context.externalCacheDir}/$FOLDER")
+                folder.mkdirs()
+
+                val f =
+                    File("${context.externalCacheDir}/$FOLDER/$CACHE_LOCATION_FILE_NAME$POSTFIX")
+                if (!f.exists()) {
+                    f.createNewFile()
+                }
+
+                val fileWriter = FileWriter(f, true)
+
+                val bw = BufferedWriter(fileWriter)
+                val out = PrintWriter(bw)
+                out.println(Gson().toJson(locationEntry))
+                out.close()
+                fileWriter.close()
+
+                return true
+            } catch (e: Exception) {
+                Log.e(TAG, e.message.toString())
+                return false
+            }
+        }
+
+        fun writeAccelerometerCache(
+            context: Context,
+            accelerometerEntry: AccelerometerEntry
+        ): Boolean {
+            try {
+                val folder = File("${context.externalCacheDir}/$FOLDER")
+                folder.mkdirs()
+
+                val f =
+                    File("${context.externalCacheDir}/$FOLDER/$CACHE_AG_FILE_NAME$POSTFIX")
+                if (!f.exists()) {
+                    f.createNewFile()
+                }
+
+                val fileWriter = FileWriter(f, true)
+
+                val bw = BufferedWriter(fileWriter)
+                val out = PrintWriter(bw)
+                out.println(Gson().toJson(accelerometerEntry))
+                out.close()
+                fileWriter.close()
+
+                return true
+            } catch (e: Exception) {
                 Log.e(TAG, e.message.toString())
                 return false
             }

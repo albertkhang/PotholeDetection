@@ -2,6 +2,7 @@ package com.albertkhang.potholedetection.util
 
 import android.content.Context
 import com.albertkhang.potholedetection.model.cloud_database.IPothole
+import com.albertkhang.potholedetection.model.entry.LocationEntry
 import com.albertkhang.potholedetection.model.local_database.IDatabase
 import com.albertkhang.potholedetection.model.settings.ISettings
 import io.paperdb.Paper
@@ -14,7 +15,7 @@ class LocalDatabaseUtil {
         const val DEBUG_SETTINGS_BOOK = "debug-settings-book"
         const val RELEASE_SETTINGS_BOOK = "release-settings-book"
 
-        const val CACHE_AG_FILE_NAME = "cache_ag"
+        const val CACHE_AG_FILE_NAME = "cache_accelerometer"
         const val CACHE_LOCATION_FILE_NAME = "cache_location"
 
         /**
