@@ -56,37 +56,39 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun onMapReady() {
-        onAddLinesReady {
-            root_view.removeView(mPreparingMapProgress)
-        }
+//        onAddLinesReady {
+//            root_view.removeView(mPreparingMapProgress)
+//        }
+
+        root_view.removeView(mPreparingMapProgress)
     }
 
     private fun onAddLinesReady(objects: () -> Unit) {
-        mCloudDatabaseUtil.read("albertkhang") {
-            if (it.isSuccessful) {
-                val documents = it.result.documents
-                documents.forEach {
-//                    val username = it.data!!.get("username")
-                    val s = it.data!!["data"] as String
-                    val data = Gson().fromJson(s, Array<IPothole>::class.java)
-
-                    data.forEach {
-                        // set min speed = 2.77778 m/s = 10 km/h
-                        val polyline = mMap.addPolyline(
-                            PolylineOptions()
-                                .add(it.startLatLng)
-                                .add(it.endLatLng)
-                        )
-
-                        polyline.tag = it.quality
-
-                        stylePolyline(polyline)
-                    }
-                }
-
-                objects.invoke()
-            }
-        }
+//        mCloudDatabaseUtil.read("albertkhang") {
+//            if (it.isSuccessful) {
+//                val documents = it.result.documents
+//                documents.forEach {
+////                    val username = it.data!!.get("username")
+//                    val s = it.data!!["data"] as String
+//                    val data = Gson().fromJson(s, Array<IPothole>::class.java)
+//
+//                    data.forEach {
+//                        // set min speed = 2.77778 m/s = 10 km/h
+//                        val polyline = mMap.addPolyline(
+//                            PolylineOptions()
+//                                .add(it.startLatLng)
+//                                .add(it.endLatLng)
+//                        )
+//
+//                        polyline.tag = it.quality
+//
+//                        stylePolyline(polyline)
+//                    }
+//                }
+//
+//                objects.invoke()
+//            }
+//        }
     }
 
     private val POLYLINE_STROKE_WIDTH_PX = 12
