@@ -72,7 +72,7 @@ class NoConnectionActivity : AppCompatActivity() {
     private fun deleteLocalData() {
         if (LocalDatabaseUtil.delete(
                 this,
-                LocalDatabaseUtil.CACHE_AG_FILE_NAME,
+                LocalDatabaseUtil.CACHE_ACCELEROMETER_FILE_NAME,
                 13
             )
         ) {
@@ -97,7 +97,7 @@ class NoConnectionActivity : AppCompatActivity() {
         // show data size added
         val agDatas = LocalDatabaseUtil.read(
             this,
-            LocalDatabaseUtil.CACHE_AG_FILE_NAME, LocalDatabaseUtil.CACHE_AG_FILE_NAME
+            LocalDatabaseUtil.CACHE_ACCELEROMETER_FILE_NAME, LocalDatabaseUtil.CACHE_ACCELEROMETER_FILE_NAME
         ) as List<IAGVector>
 
         val locationDatas = LocalDatabaseUtil.read(

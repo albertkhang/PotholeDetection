@@ -15,7 +15,7 @@ class LocalDatabaseUtil {
         const val DEBUG_SETTINGS_BOOK = "debug-settings-book"
         const val RELEASE_SETTINGS_BOOK = "release-settings-book"
 
-        const val CACHE_AG_FILE_NAME = "cache_accelerometer"
+        const val CACHE_ACCELEROMETER_FILE_NAME = "cache_accelerometer"
         const val CACHE_LOCATION_FILE_NAME = "cache_location"
 
         /**

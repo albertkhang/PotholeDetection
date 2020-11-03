@@ -16,7 +16,6 @@ import androidx.core.content.ContextCompat
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.animation.AlphaAnimation
 import com.albertkhang.potholedetection.broadcast.NetworkChangeReceiver
-import com.albertkhang.potholedetection.model.cloud_database.IPothole
 import com.albertkhang.potholedetection.model.local_database.IAGVector
 import com.albertkhang.potholedetection.model.local_database.ILocation
 import com.albertkhang.potholedetection.util.*
@@ -28,7 +27,6 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
-import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_main.*
 
 @SuppressLint("MissingPermission")
@@ -110,7 +108,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private fun deleteLocalData() {
         if (LocalDatabaseUtil.delete(
                 this,
-                LocalDatabaseUtil.CACHE_AG_FILE_NAME,
+                LocalDatabaseUtil.CACHE_ACCELEROMETER_FILE_NAME,
                 13
             )
         ) {
@@ -176,7 +174,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     // show data size added
                     val agDatas = LocalDatabaseUtil.read(
                         this,
-                        LocalDatabaseUtil.CACHE_AG_FILE_NAME, LocalDatabaseUtil.CACHE_AG_FILE_NAME
+                        LocalDatabaseUtil.CACHE_ACCELEROMETER_FILE_NAME,
+                        LocalDatabaseUtil.CACHE_ACCELEROMETER_FILE_NAME
                     ) as List<IAGVector>
 
                     val locationDatas = LocalDatabaseUtil.read(

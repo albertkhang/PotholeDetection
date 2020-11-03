@@ -119,14 +119,17 @@ class DetectingNotification : Service() {
             val mainHandler = Handler(Looper.getMainLooper())
             val uploadTimeInterval = LocalDatabaseUtil.readSettings()!!.uploadDataInterval
 
-            mainHandler.postDelayed(object : Runnable {
-                override fun run() {
-                    if (isRunning) {
-                        DataFilterUtil.run(context)
-                        mainHandler.postDelayed(this, uploadTimeInterval)
-                    }
-                }
-            }, uploadTimeInterval)
+            FilterUtil.run(context)
+
+            // TODO: uncomment this
+//            mainHandler.postDelayed(object : Runnable {
+//                override fun run() {
+//                    if (isRunning) {
+//                        FilterUtil.run(context)
+//                        mainHandler.postDelayed(this, uploadTimeInterval)
+//                    }
+//                }
+//            }, uploadTimeInterval)
         }
 
         fun stopService(context: Context) {

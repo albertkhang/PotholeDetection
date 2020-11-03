@@ -9,11 +9,13 @@ import com.albertkhang.potholedetection.model.entry.LocationEntry
 import com.albertkhang.potholedetection.model.local_database.IAGVector
 import com.albertkhang.potholedetection.model.local_database.IDatabase
 import com.albertkhang.potholedetection.model.local_database.ILocation
-import com.albertkhang.potholedetection.util.LocalDatabaseUtil.Companion.CACHE_AG_FILE_NAME
+import com.albertkhang.potholedetection.util.LocalDatabaseUtil.Companion.CACHE_ACCELEROMETER_FILE_NAME
 import com.albertkhang.potholedetection.util.LocalDatabaseUtil.Companion.CACHE_LOCATION_FILE_NAME
 import com.google.gson.Gson
 import java.io.*
 import java.lang.Exception
+import java.util.*
+import kotlin.collections.ArrayList
 
 class FileUtil {
     companion object {
@@ -121,6 +123,35 @@ class FileUtil {
             }
         }
 
+        fun readLocationCache(context: Context): LinkedList<LocationEntry> {
+            try {
+                val folder = File("${context.externalCacheDir}/$FOLDER")
+                folder.mkdirs()
+
+                val f =
+                    File("${context.externalCacheDir}/$FOLDER/$CACHE_LOCATION_FILE_NAME$POSTFIX")
+                if (!f.exists()) {
+                    f.createNewFile()
+                    return LinkedList<LocationEntry>()
+                }
+
+                val fileReader = FileReader(f)
+                val dataString = fileReader.readLines()
+                val locationEntries = LinkedList<LocationEntry>()
+
+                dataString.forEach {
+                    locationEntries.add(Gson().fromJson(it, LocationEntry::class.java))
+                }
+
+                fileReader.close()
+
+                return locationEntries
+            } catch (e: Exception) {
+                Log.e(TAG, e.message.toString())
+                return LinkedList<LocationEntry>()
+            }
+        }
+
         fun writeLocationCache(context: Context, locationEntry: LocationEntry): Boolean {
             try {
                 val folder = File("${context.externalCacheDir}/$FOLDER")
@@ -147,6 +178,35 @@ class FileUtil {
             }
         }
 
+        fun readAccelerometerCache(context: Context): LinkedList<AccelerometerEntry> {
+            try {
+                val folder = File("${context.externalCacheDir}/$FOLDER")
+                folder.mkdirs()
+
+                val f =
+                    File("${context.externalCacheDir}/$FOLDER/$CACHE_ACCELEROMETER_FILE_NAME$POSTFIX")
+                if (!f.exists()) {
+                    f.createNewFile()
+                    return LinkedList<AccelerometerEntry>()
+                }
+
+                val fileReader = FileReader(f)
+                val dataString = fileReader.readLines()
+                val locationEntries = LinkedList<AccelerometerEntry>()
+
+                dataString.forEach {
+                    locationEntries.add(Gson().fromJson(it, AccelerometerEntry::class.java))
+                }
+
+                fileReader.close()
+
+                return locationEntries
+            } catch (e: Exception) {
+                Log.e(TAG, e.message.toString())
+                return LinkedList<AccelerometerEntry>()
+            }
+        }
+
         fun writeAccelerometerCache(
             context: Context,
             accelerometerEntry: AccelerometerEntry
@@ -156,7 +216,7 @@ class FileUtil {
                 folder.mkdirs()
 
                 val f =
-                    File("${context.externalCacheDir}/$FOLDER/$CACHE_AG_FILE_NAME$POSTFIX")
+                    File("${context.externalCacheDir}/$FOLDER/$CACHE_ACCELEROMETER_FILE_NAME$POSTFIX")
                 if (!f.exists()) {
                     f.createNewFile()
                 }
@@ -192,7 +252,7 @@ class FileUtil {
                 val datas = ArrayList<IDatabase>()
 
                 val typeClass = when (type) {
-                    LocalDatabaseUtil.CACHE_AG_FILE_NAME -> IAGVector::class.java
+                    LocalDatabaseUtil.CACHE_ACCELEROMETER_FILE_NAME -> IAGVector::class.java
                     LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME -> ILocation::class.java
                     else -> return datas.toList()
                 }
@@ -234,7 +294,7 @@ class FileUtil {
                 val folder = File("${context.externalCacheDir}/$FOLDER")
                 folder.mkdirs()
 
-                val agName = LocalDatabaseUtil.CACHE_AG_FILE_NAME
+                val agName = LocalDatabaseUtil.CACHE_ACCELEROMETER_FILE_NAME
                 val locationName = LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME
 
                 val f1 = File("${context.externalCacheDir}/$FOLDER/$agName$POSTFIX")
