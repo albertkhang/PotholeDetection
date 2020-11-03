@@ -5,6 +5,7 @@ import android.util.Log
 import com.albertkhang.potholedetection.model.IVector3D
 import com.albertkhang.potholedetection.model.cloud_database.IPothole
 import com.albertkhang.potholedetection.model.cloud_database.IUserPothole
+import com.albertkhang.potholedetection.model.entry.AccelerometerEntry
 import com.albertkhang.potholedetection.model.entry.LocationEntry
 import com.albertkhang.potholedetection.model.local_database.IAGVector
 import com.albertkhang.potholedetection.model.local_database.IDatabase
@@ -43,10 +44,6 @@ class FilterUtil {
 
                     i++
                 }
-            } else {
-                if (locationEntries[1].timestamp - locationEntries[0].timestamp < stopRecordingInterval) {
-                    roads.add(locationEntries)
-                }
             }
 
             return roads
@@ -74,19 +71,30 @@ class FilterUtil {
             }
         }
 
+        private fun readLocationCache(context: Context): LinkedList<LinkedList<LocationEntry>> {
+            val locationEntries = FileUtil.readLocationCache(context)
+            return roadsDetect(locationEntries)
+        }
+
+        private fun readAccelerometerCache(context: Context): LinkedList<AccelerometerEntry> {
+            return FileUtil.readAccelerometerCache(context)
+        }
+
+
         fun run(context: Context) {
             Thread {
-                val locationEntries = FileUtil.readLocationCache(context)
-                val accelerometerEntries = FileUtil.readAccelerometerCache(context)
+                val roads = readLocationCache(context)
+                Log.d(TAG, "roads size=${roads.size}")
 
-                Log.d(TAG, "locationEntries size=${locationEntries.size}")
+                val accelerometerEntries = readAccelerometerCache(context)
                 Log.d(TAG, "accelerometerEntries size=${accelerometerEntries.size}")
 
-                val roads = roadsDetect(locationEntries)
-                Log.d(TAG,"roads size=${roads.size}")
-
-                roads.forEach {
-                    Log.d(TAG, "index=${roads.indexOf(it)}, size=${it.size}")
+                if (roads.size == 0) {
+                    FileUtil.deleteAllCacheFile(context)
+                } else {
+                    roads.forEach {
+                        Log.d(TAG, "index=${roads.indexOf(it)}, size=${it.size}")
+                    }
                 }
 
 //                if (showLog)

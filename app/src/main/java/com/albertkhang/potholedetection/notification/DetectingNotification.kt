@@ -76,9 +76,16 @@ class DetectingNotification : Service() {
                         }
                     }
 
+                var lastLocationEntry = LocationEntry(LatLng(0.0, 0.0), 0f)
                 mLocationSensor = object : LocationSensor(context) {
                     override fun onUpdate(location: Location) {
                         Log.d(TAG, "LocationSensor onUpdate")
+
+                        if (LatLng(
+                                location.latitude,
+                                location.longitude
+                            ) == lastLocationEntry.location
+                        ) return
 
                         // TODO: set setting this
                         val minSpeed = 2.77778 // m/s = 10 km/h
@@ -95,11 +102,13 @@ class DetectingNotification : Service() {
                         } else if (isRecording) {
                             Log.d(TAG, "isRecording")
 
+                            lastLocationEntry = LocationEntry(
+                                LatLng(location.latitude, location.longitude),
+                                location.speed
+                            )
+
                             FileUtil.writeLocationCache(
-                                context, LocationEntry(
-                                    LatLng(location.latitude, location.longitude),
-                                    location.speed
-                                )
+                                context, lastLocationEntry
                             )
                         }
                     }

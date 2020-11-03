@@ -3,8 +3,10 @@ package com.albertkhang.potholedetection.activity
 import android.animation.Animator
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
+import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -53,12 +55,51 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         addEvent()
     }
 
+    /**
+     * @unit meter
+     */
+    private fun distanceBetween(start: LatLng, end: LatLng): Float {
+        val results = FloatArray(4)
+        Location.distanceBetween(
+            start.latitude,
+            start.longitude,
+            end.latitude,
+            end.longitude,
+            results
+        )
+
+        return results[0]
+    }
+
     private fun onMapReady() {
 //        onAddLinesReady {
 //            root_view.removeView(mPreparingMapProgress)
 //        }
 
         root_view.removeView(mPreparingMapProgress)
+
+        val start = LatLng(10.757091407089394, 106.71794652134589)
+        val end = LatLng(10.757101262660854, 106.71792628559059)
+
+        val distance = distanceBetween(start, end)
+        Log.d(TAG, "distance=$distance")
+
+//        mMap.addPolyline(
+//            PolylineOptions()
+//                .add(LatLng(10.757091407089394, 106.71794652134589))
+//                .add(LatLng(10.757101262660854, 106.71792628559059))
+//                .color(Color.GREEN)
+//                .width(10f)
+//        )
+
+//        mMap.addPolyline(
+//            PolylineOptions()
+//                .add(LatLng(10.757096499999998, 106.7179364))
+//                .add(LatLng(10.757101262660855, 106.71792628559059))
+//                .color(Color.BLUE)
+//        )
+
+//        moveToLocation(LatLng(10.757091407089394, 106.71794652134589))
     }
 
     private fun onAddLinesReady(objects: () -> Unit) {
@@ -350,6 +391,18 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             val current = LatLng(it.latitude, it.longitude)
             mMap.moveCamera(CameraUpdateFactory.newLatLng(current))
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, MAP_ZOOM.toFloat()))
+        }
+    }
+
+    private fun moveToLocation(location: LatLng) {
+        mFusedLocationClient.lastLocation.addOnSuccessListener {
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(location))
+            mMap.animateCamera(
+                CameraUpdateFactory.newLatLngZoom(
+                    location,
+                    MAP_ZOOM.toFloat()
+                )
+            )
         }
     }
 
