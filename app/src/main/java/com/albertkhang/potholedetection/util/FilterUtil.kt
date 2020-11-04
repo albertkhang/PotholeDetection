@@ -1,15 +1,17 @@
 package com.albertkhang.potholedetection.util
 
 import android.content.Context
+import android.location.Location
 import android.util.Log
 import com.albertkhang.potholedetection.model.IVector3D
 import com.albertkhang.potholedetection.model.cloud_database.IPothole
-import com.albertkhang.potholedetection.model.cloud_database.IUserPothole
 import com.albertkhang.potholedetection.model.entry.AccelerometerEntry
+import com.albertkhang.potholedetection.model.entry.LocalEntry
 import com.albertkhang.potholedetection.model.entry.LocationEntry
 import com.albertkhang.potholedetection.model.local_database.IAGVector
 import com.albertkhang.potholedetection.model.local_database.IDatabase
 import com.albertkhang.potholedetection.model.local_database.ILocation
+import com.google.android.gms.maps.model.LatLng
 import com.google.gson.Gson
 import java.util.*
 
@@ -19,24 +21,52 @@ class FilterUtil {
         private const val showLog = true
 
         private const val minSpeed = 1.38889 // m/s = 5 km/h
-        private const val isDeleteCacheFile = true // default: true
+        private const val isDeleteCacheFile = false // default: true
         private const val isWriteFilteredCacheFile = false // default: falseee
 
         private val mCloudDatabaseUtil = CloudDatabaseUtil()
+
+        /**
+         * @unit meter
+         */
+        private fun distanceBetween(start: LatLng, end: LatLng): Float {
+            val results = FloatArray(4)
+            Location.distanceBetween(
+                start.latitude,
+                start.longitude,
+                end.latitude,
+                end.longitude,
+                results
+            )
+
+            return results[0]
+        }
 
         private fun roadsDetect(locationEntries: LinkedList<LocationEntry>): LinkedList<LinkedList<LocationEntry>> {
             val roads = LinkedList<LinkedList<LocationEntry>>()
 
             // TODO: set setting this
             val stopRecordingInterval = 1000 * 60 * 5 // 5 min
+            val minDistanceBetween2Points = 30 // 30 meter
+
             if (locationEntries.size > 2) {
                 roads.add(LinkedList<LocationEntry>())
                 roads.last.add(locationEntries.first)
 
                 var i = 1
+                var timestampInterval: Long
+                var distance: Float
+                var start: LocationEntry
+                var end: LocationEntry
 
                 while (i < locationEntries.size) {
-                    if (locationEntries[i].timestamp - locationEntries[i - 1].timestamp >= stopRecordingInterval) {
+                    start = locationEntries[i - 1]
+                    end = locationEntries[i]
+
+                    timestampInterval = end.timestamp - start.timestamp
+                    distance = distanceBetween(start.location, end.location)
+
+                    if (timestampInterval >= stopRecordingInterval || distance > minDistanceBetween2Points) {
                         roads.add(LinkedList<LocationEntry>())
                     }
 
@@ -80,9 +110,20 @@ class FilterUtil {
             return FileUtil.readAccelerometerCache(context)
         }
 
+        private fun removeUnusedAccelerometerAtLast(
+            roads: LinkedList<LinkedList<LocationEntry>>,
+            accelerometerEntries: LinkedList<AccelerometerEntry>
+        ) {
+            val lastTimestamp = roads.last.last.timestamp
+            while (accelerometerEntries.last.timestamp >= lastTimestamp) {
+                accelerometerEntries.removeLast()
+            }
+        }
 
         fun run(context: Context) {
             Thread {
+                // TODO: start new thread
+
                 val roads = readLocationCache(context)
                 Log.d(TAG, "roads size=${roads.size}")
 
@@ -90,21 +131,22 @@ class FilterUtil {
                 Log.d(TAG, "accelerometerEntries size=${accelerometerEntries.size}")
 
                 if (roads.size == 0) {
-                    FileUtil.deleteAllCacheFile(context)
-                } else {
-                    roads.forEach {
-                        Log.d(TAG, "index=${roads.indexOf(it)}, size=${it.size}")
+                    if (isDeleteCacheFile) {
+                        FileUtil.deleteAllCacheFile(context)
                     }
+                    return@Thread
                 }
 
-//                if (showLog)
-//                    Log.d(
-//                        TAG,
-//                        "start filter minute=${
-//                            Calendar.getInstance().get(Calendar.MINUTE)
-//                        }, second=${Calendar.getInstance().get(Calendar.SECOND)}"
-//                    )
-//
+                removeUnusedAccelerometerAtLast(roads, accelerometerEntries)
+
+                val mixedEntries = LinkedList<LocalEntry>()
+                roads.forEach {
+                    Log.d(TAG, "index=${roads.indexOf(it)}, size=${it.size}")
+                    mixedEntries.clear()
+
+                    mixedEntries.add(it.first)
+                }
+
 //                var isCacheEmpty = false
 //
 //                // read IAGVector data from cache file

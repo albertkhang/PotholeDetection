@@ -30,6 +30,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_main.*
+import java.util.*
 
 @SuppressLint("MissingPermission")
 // Checked permissions before go to this activity
@@ -55,22 +56,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         addEvent()
     }
 
-    /**
-     * @unit meter
-     */
-    private fun distanceBetween(start: LatLng, end: LatLng): Float {
-        val results = FloatArray(4)
-        Location.distanceBetween(
-            start.latitude,
-            start.longitude,
-            end.latitude,
-            end.longitude,
-            results
-        )
-
-        return results[0]
-    }
-
     private fun onMapReady() {
 //        onAddLinesReady {
 //            root_view.removeView(mPreparingMapProgress)
@@ -78,11 +63,44 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         root_view.removeView(mPreparingMapProgress)
 
-        val start = LatLng(10.757091407089394, 106.71794652134589)
-        val end = LatLng(10.757101262660854, 106.71792628559059)
-
-        val distance = distanceBetween(start, end)
-        Log.d(TAG, "distance=$distance")
+//        val location = LinkedList<Int>()
+//        location.add(1)
+//        location.add(4)
+//        location.add(7)
+//        location.add(10)
+//        location.add(13)
+//
+//        val accelerometer = LinkedList<Int>()
+//        accelerometer.add(2)
+//        accelerometer.add(3)
+//        accelerometer.add(5)
+//        accelerometer.add(6)
+//        accelerometer.add(9)
+//        accelerometer.add(11)
+//
+//        val mixed = LinkedList<Int>()
+//
+//        var i = 0
+//        var j = 0
+//        while (i < location.size) {
+//            if (j == accelerometer.size) {
+//                break
+//            }
+//
+//            if (location[i] < accelerometer[j]) {
+//                mixed.add(location[i])
+//                i++
+//            } else {
+//                mixed.add(accelerometer[j])
+//                j++
+//            }
+//        }
+//
+//        for (c in i until location.size) {
+//            mixed.add(location[c])
+//        }
+//
+//        Log.d(TAG, "$mixed")
 
 //        mMap.addPolyline(
 //            PolylineOptions()
