@@ -23,10 +23,7 @@ import com.albertkhang.potholedetection.model.local_database.ILocation
 import com.albertkhang.potholedetection.model.response.SnapToRoadsResponse
 import com.albertkhang.potholedetection.service.SettingsService
 import com.albertkhang.potholedetection.service.SnapToRoadsService
-import com.albertkhang.potholedetection.util.CloudDatabaseUtil
-import com.albertkhang.potholedetection.util.DisplayUtil
-import com.albertkhang.potholedetection.util.LocalDatabaseUtil
-import com.albertkhang.potholedetection.util.SettingsUtil
+import com.albertkhang.potholedetection.util.*
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -44,6 +41,7 @@ import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.*
 
 @SuppressLint("MissingPermission")
 // Checked permissions before go to this activity
@@ -76,38 +74,34 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         root_view.removeView(mPreparingMapProgress)
 
-        val retrofit: Retrofit = Retrofit.Builder()
-            .baseUrl(SnapToRoadsService.URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-
-        val service = retrofit.create(SnapToRoadsService::class.java)
-
-        val s = "10.79209847,106.69942079|10.7920884,106.69943616"
-        service.get(s).enqueue(object : Callback<SnapToRoadsResponse> {
-            override fun onResponse(
-                call: Call<SnapToRoadsResponse>,
-                response: Response<SnapToRoadsResponse>
-            ) {
-                if (response.code() == 200) {
-                    if (response.body() != null) {
-                        val snappedPoints = response.body()!!.snappedPoints
-                        snappedPoints.forEach {
-                            Log.d(TAG, "$it")
-                        }
-                    } else {
-                        Log.d(TAG, "snapToRoadsResponse == null")
-                    }
-                } else {
-                    Log.d(TAG, "response code=${response.code()}")
-                }
-            }
-
-            override fun onFailure(call: Call<SnapToRoadsResponse>, throwable: Throwable) {
-                Log.d(TAG, throwable.message.toString())
-            }
-
-        })
+//        val points = LinkedList<LatLng>()
+//        points.add(LatLng(10.79209847, 106.69942079))
+//        points.add(LatLng(10.7920884, 106.69943616))
+//
+//        FilterUtil.getOnSnapToRoads(points, object : Callback<SnapToRoadsResponse> {
+//            override fun onResponse(
+//                call: Call<SnapToRoadsResponse>,
+//                response: Response<SnapToRoadsResponse>
+//            ) {
+//                if (response.code() == 200) {
+//                    if (response.body() != null) {
+//                        val snappedPoints = response.body()!!.snappedPoints
+//                        snappedPoints.forEach {
+//                            Log.d(TAG, "$it")
+//                        }
+//                    } else {
+//                        Log.d(TAG, "snapToRoadsResponse == null")
+//                    }
+//                } else {
+//                    Log.d(TAG, "response code=${response.code()}")
+//                }
+//            }
+//
+//            override fun onFailure(call: Call<SnapToRoadsResponse>, throwable: Throwable) {
+//                Log.d(TAG, throwable.message.toString())
+//            }
+//
+//        })
 
 //        val result = FloatArray(4)
 //        Location.distanceBetween(

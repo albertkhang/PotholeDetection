@@ -8,11 +8,17 @@ import com.albertkhang.potholedetection.model.cloud_database.IPothole
 import com.albertkhang.potholedetection.model.entry.AccelerometerEntry
 import com.albertkhang.potholedetection.model.entry.LocalEntry
 import com.albertkhang.potholedetection.model.entry.LocationEntry
-import com.albertkhang.potholedetection.model.entry.RoadEntry
 import com.albertkhang.potholedetection.model.local_database.IAGVector
 import com.albertkhang.potholedetection.model.local_database.IDatabase
 import com.albertkhang.potholedetection.model.local_database.ILocation
+import com.albertkhang.potholedetection.model.response.SnapToRoadsResponse
+import com.albertkhang.potholedetection.service.SnapToRoadsService
 import com.google.android.gms.maps.model.LatLng
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.*
 
 class FilterUtil {
@@ -73,34 +79,31 @@ class FilterUtil {
                 }
             }
 
-//            mixedEntries.forEach {
-//                if (it is LocationEntry) {
-//                    if (start == null) {
-//                        start = it
-//                    } else {
-//                        end = it
-//
-//                        if (sumIRI != 0f) {
-//                            val iri = sumIRI / sizeIRI
-//
-//                            if (iri > averageIRI) {
-//                                roads.add(RoadEntry(start!!.location, end!!.location, "", iri))
-//                            }
-//
-//                            sumIRI = 0f
-//                            sizeIRI = 0
-//                        }
-//
-//                        start = it
-//                        end = null
-//                    }
-//                } else if (it is AccelerometerEntry) {
-//                    sumIRI += it.iri
-//                    sizeIRI++
-//                }
-//            }
-
             return roads
+        }
+
+        private fun distanceFilter(roads: LinkedList<LinkedList<LocalEntry>>) {
+            // TODO: set this to setting
+            val maxDistance = 13 // meter
+
+            val removeEntries = LinkedList<LinkedList<LocalEntry>>()
+
+            var start: LocationEntry
+            var end: LocationEntry
+
+            roads.forEach {
+                start = it.first as LocationEntry
+                end = it.last as LocationEntry
+
+                if (distanceBetween(start.location, end.location) > maxDistance) {
+                    removeEntries.add(it)
+                }
+            }
+            Log.d(TAG, "distanceFilter remove ${removeEntries.size} entry.")
+
+            removeEntries.forEach {
+                roads.remove(it)
+            }
         }
 
         private fun read(context: Context, type: String): List<IDatabase> {
@@ -168,19 +171,23 @@ class FilterUtil {
                 val roads = roadsDetect(mixedEntries)
                 Log.d(TAG, "roads size=${roads.size}")
 
-                val localEntries = roads.first
-                localEntries.forEach {
-                    Log.d(TAG, "$it")
-                }
+                distanceFilter(roads)
+                Log.d(TAG, "roads size=${roads.size}")
+
+                firstIRIFilter(roads)
+                Log.d(TAG, "roads size=${roads.size}")
 
                 if (NetworkUtil.isNetworkAvailable(context)) {
                     // Have Connection
 
+//                    val points = getPoints(roads)
+//                    Log.d(TAG, "points size=${points.size}")
 
+                    // TODO: xử lý lấy snap to roads bất đồng bộ
                 } else {
                     // No Connection
 
-                    if(isWriteFilteredCacheFile){
+                    if (isWriteFilteredCacheFile) {
                         FileUtil.writeFilteredCache(context, roads)
                     }
 
@@ -189,6 +196,90 @@ class FilterUtil {
                     }
                 }
             }.start()
+        }
+
+        private fun firstIRIFilter(roads: LinkedList<LinkedList<LocalEntry>>) {
+            // TODO: set this to settings
+            val minFirstIRIFilter = 0.2 * 0.8
+
+            val iris = LinkedList<Float>()
+            val removeEntries = LinkedList<LinkedList<LocalEntry>>()
+
+            roads.forEach {
+                it.forEach {
+                    if (it is AccelerometerEntry) {
+                        iris += it.iri
+                    }
+                }
+
+                if (getAverageIRI(iris) < minFirstIRIFilter) {
+                    removeEntries.add(it)
+                }
+
+                iris.clear()
+            }
+            Log.d(TAG, "firstIRIFilter remove ${removeEntries.size} entry.")
+            Log.d(
+                TAG,
+                "firstIRIFilter count=${removeEntries.size}, " +
+                        "size=${roads.size}, " +
+                        "remain=${roads.size - removeEntries.size}, " +
+                        "percentRemoved=${removeEntries.size * 100f / roads.size}%"
+            )
+
+            removeEntries.forEach {
+                roads.remove(it)
+            }
+        }
+
+        private fun getPoints(roads: LinkedList<LinkedList<LocalEntry>>): LinkedList<LatLng> {
+            val points = LinkedList<LatLng>()
+
+            roads.forEach {
+                val locationEntryFirst = it.first as LocationEntry
+                val locationEntryLast = it.last as LocationEntry
+
+                points.add(locationEntryFirst.location)
+                points.add(locationEntryLast.location)
+            }
+
+            return points
+        }
+
+        /**
+         * @maxPoints 100
+         */
+        fun getOnSnapToRoads(points: LinkedList<LatLng>, callback: Callback<SnapToRoadsResponse>) {
+            var s = ""
+            val size = points.size
+            for (i in points.indices) {
+                s += "${points[i].latitude},${points[i].longitude}"
+
+                if (i != size - 1) {
+                    s += "|"
+                }
+            }
+
+            val retrofit: Retrofit = Retrofit.Builder()
+                .baseUrl(SnapToRoadsService.URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+
+            val service = retrofit.create(SnapToRoadsService::class.java)
+
+            service.get(s).enqueue(object : Callback<SnapToRoadsResponse> {
+                override fun onResponse(
+                    call: Call<SnapToRoadsResponse>,
+                    response: Response<SnapToRoadsResponse>
+                ) {
+                    callback.onResponse(call, response)
+                }
+
+                override fun onFailure(call: Call<SnapToRoadsResponse>, throwable: Throwable) {
+                    callback.onFailure(call, throwable)
+                }
+
+            })
         }
 
         private fun mixEntries(
