@@ -62,16 +62,15 @@ class DetectingNotification : Service() {
                 mAccelerometerSensor =
                     object : AccelerometerSensor(context) {
                         override fun onUpdate(accelerometer: IVector3D, gravity: IVector3D) {
-                            if (isRecording) {
-                                Log.d(TAG, "AccelerometerSensor onUpdate isRecording")
-                                val iri = IRIUtil.getIRI(accelerometer, gravity)
-                                if (iri != lastIRI && iri >= minIRI) {
-                                    FileUtil.writeAccelerometerCache(
-                                        context,
-                                        AccelerometerEntry(iri)
-                                    )
-                                    lastIRI = iri
-                                }
+                            Log.d(TAG, "AccelerometerSensor onUpdate isRecording")
+
+                            val iri = IRIUtil.getIRI(accelerometer, gravity)
+                            if (iri != lastIRI && iri >= minIRI) {
+                                FileUtil.writeAccelerometerCache(
+                                    context,
+                                    AccelerometerEntry(iri)
+                                )
+                                lastIRI = iri
                             }
                         }
                     }
@@ -94,11 +93,13 @@ class DetectingNotification : Service() {
                             Log.d(TAG, "location.speed >= minSpeed")
                             lastRecordTime = System.currentTimeMillis()
                             isRecording = true
+                            mAccelerometerSensor.start()
                         }
 
                         if (System.currentTimeMillis() - lastRecordTime >= stopRecordingInterval) {
                             Log.d(TAG, " >= stopRecordingInterval")
                             isRecording = false
+                            mAccelerometerSensor.stop()
                         } else if (isRecording) {
                             Log.d(TAG, "isRecording")
 
@@ -120,7 +121,7 @@ class DetectingNotification : Service() {
             val startIntent = Intent(context, DetectingNotification::class.java)
             ContextCompat.startForegroundService(context, startIntent)
             initSensors(context)
-            mAccelerometerSensor.start()
+//            mAccelerometerSensor.start()
             mLocationSensor.start()
             isStarted = true
 
@@ -149,7 +150,7 @@ class DetectingNotification : Service() {
     }
 
     override fun onDestroy() {
-        mAccelerometerSensor.stop()
+//        mAccelerometerSensor.stop()
         mLocationSensor.stop()
         isStarted = false
 
