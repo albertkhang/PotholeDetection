@@ -1,10 +1,12 @@
 package com.albertkhang.potholedetection.util
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import com.albertkhang.potholedetection.model.cloud_database.IPothole
 import com.albertkhang.potholedetection.model.entry.AccelerometerEntry
+import com.albertkhang.potholedetection.model.entry.LocalEntry
 import com.albertkhang.potholedetection.model.entry.LocationEntry
 import com.albertkhang.potholedetection.model.local_database.IAGVector
 import com.albertkhang.potholedetection.model.local_database.IDatabase
@@ -14,10 +16,12 @@ import com.albertkhang.potholedetection.util.LocalDatabaseUtil.Companion.CACHE_L
 import com.google.gson.Gson
 import java.io.*
 import java.lang.Exception
+import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
 class FileUtil {
+    @SuppressLint("SimpleDateFormat")
     companion object {
         private const val TAG = "FileUtil"
         private const val POSTFIX = ".txt"
@@ -232,6 +236,47 @@ class FileUtil {
                 Log.e(TAG, e.message.toString())
                 return false
             }
+        }
+
+        fun writeFilteredCache(
+            context: Context,
+            roads: LinkedList<LinkedList<LocalEntry>>
+        ): Boolean {
+            try {
+                val folder = File("${context.externalCacheDir}/$FOLDER")
+                folder.mkdirs()
+
+                val cacheFolder = File("${context.externalCacheDir}/$FOLDER/$FILTERED_FOLDER")
+                cacheFolder.mkdirs()
+
+                val fileName =
+                    "${getCurrentTimeFormat()}_${LocalDatabaseUtil.CACHE_FILTERED_FILE_NAME}"
+
+                val f =
+                    File("${context.externalCacheDir}/$FOLDER/$FILTERED_FOLDER/$fileName$POSTFIX")
+                if (!f.exists()) {
+                    f.createNewFile()
+                }
+
+                val fileWriter = FileWriter(f, true)
+
+                val bw = BufferedWriter(fileWriter)
+                val out = PrintWriter(bw)
+                out.println(Gson().toJson(roads))
+                out.close()
+                fileWriter.close()
+
+                return true
+            } catch (e: Exception) {
+                Log.e(TAG, e.message.toString())
+                return false
+            }
+        }
+
+        @SuppressLint("SimpleDateFormat")
+        private val sdf = SimpleDateFormat("yyyyMMdd_HHmm")
+        private fun getCurrentTimeFormat(): String {
+            return sdf.format(Date())
         }
 
         fun read(context: Context, fileName: String, type: String): List<IDatabase> {

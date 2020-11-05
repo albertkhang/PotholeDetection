@@ -172,7 +172,22 @@ class FilterUtil {
                 localEntries.forEach {
                     Log.d(TAG, "$it")
                 }
-                
+
+                if (NetworkUtil.isNetworkAvailable(context)) {
+                    // Have Connection
+
+
+                } else {
+                    // No Connection
+
+                    if(isWriteFilteredCacheFile){
+                        FileUtil.writeFilteredCache(context, roads)
+                    }
+
+                    if (isDeleteCacheFile) {
+                        FileUtil.deleteAllCacheFile(context)
+                    }
+                }
             }.start()
         }
 

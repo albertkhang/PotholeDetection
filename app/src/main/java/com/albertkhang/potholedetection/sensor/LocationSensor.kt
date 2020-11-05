@@ -25,14 +25,14 @@ abstract class LocationSensor(context: Context) : LocationListener, BaseSensor {
          * @Unit millisecond
          */
         private val MIN_MILLISECOND_UPDATES =
-            LocalDatabaseUtil.readSettings()!!.location.minMillisecondsUpdate
+            LocalDatabaseUtil.readSettings()!!.locationResponse.minMillisecondsUpdate
 
         /**
          * Minimum Meter Update
          *
          * @Unit meter
          */
-        private val MIN_METER_UPDATES = LocalDatabaseUtil.readSettings()!!.location.minMeterUpdate
+        private val MIN_METER_UPDATES = LocalDatabaseUtil.readSettings()!!.locationResponse.minMeterUpdate
     }
 
     fun start() {

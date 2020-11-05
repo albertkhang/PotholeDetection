@@ -3,16 +3,16 @@ package com.albertkhang.potholedetection.activity
 import android.animation.Animator
 import android.annotation.SuppressLint
 import android.app.AlertDialog
-import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
-import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.FrameLayout
+import android.widget.RelativeLayout
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.albertkhang.potholedetection.R
@@ -20,17 +20,30 @@ import com.albertkhang.potholedetection.animation.AlphaAnimation
 import com.albertkhang.potholedetection.broadcast.NetworkChangeReceiver
 import com.albertkhang.potholedetection.model.local_database.IAGVector
 import com.albertkhang.potholedetection.model.local_database.ILocation
-import com.albertkhang.potholedetection.util.*
+import com.albertkhang.potholedetection.model.response.SnapToRoadsResponse
+import com.albertkhang.potholedetection.service.SettingsService
+import com.albertkhang.potholedetection.service.SnapToRoadsService
+import com.albertkhang.potholedetection.util.CloudDatabaseUtil
+import com.albertkhang.potholedetection.util.DisplayUtil
+import com.albertkhang.potholedetection.util.LocalDatabaseUtil
+import com.albertkhang.potholedetection.util.SettingsUtil
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.*
+import com.google.android.gms.maps.model.JointType
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Polyline
+import com.google.android.gms.maps.model.RoundCap
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_main.*
-import java.util.*
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 @SuppressLint("MissingPermission")
 // Checked permissions before go to this activity
@@ -62,6 +75,39 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 //        }
 
         root_view.removeView(mPreparingMapProgress)
+
+        val retrofit: Retrofit = Retrofit.Builder()
+            .baseUrl(SnapToRoadsService.URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        val service = retrofit.create(SnapToRoadsService::class.java)
+
+        val s = "10.79209847,106.69942079|10.7920884,106.69943616"
+        service.get(s).enqueue(object : Callback<SnapToRoadsResponse> {
+            override fun onResponse(
+                call: Call<SnapToRoadsResponse>,
+                response: Response<SnapToRoadsResponse>
+            ) {
+                if (response.code() == 200) {
+                    if (response.body() != null) {
+                        val snappedPoints = response.body()!!.snappedPoints
+                        snappedPoints.forEach {
+                            Log.d(TAG, "$it")
+                        }
+                    } else {
+                        Log.d(TAG, "snapToRoadsResponse == null")
+                    }
+                } else {
+                    Log.d(TAG, "response code=${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<SnapToRoadsResponse>, throwable: Throwable) {
+                Log.d(TAG, throwable.message.toString())
+            }
+
+        })
 
 //        val result = FloatArray(4)
 //        Location.distanceBetween(

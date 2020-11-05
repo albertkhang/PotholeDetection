@@ -2,9 +2,8 @@ package com.albertkhang.potholedetection.util
 
 import android.content.Context
 import com.albertkhang.potholedetection.model.cloud_database.IPothole
-import com.albertkhang.potholedetection.model.entry.LocationEntry
 import com.albertkhang.potholedetection.model.local_database.IDatabase
-import com.albertkhang.potholedetection.model.settings.ISettings
+import com.albertkhang.potholedetection.model.response.SettingsResponse
 import io.paperdb.Paper
 import java.text.SimpleDateFormat
 import java.util.*
@@ -17,25 +16,26 @@ class LocalDatabaseUtil {
 
         const val CACHE_ACCELEROMETER_FILE_NAME = "cache_accelerometer"
         const val CACHE_LOCATION_FILE_NAME = "cache_location"
+        const val CACHE_FILTERED_FILE_NAME = "cache_filtered"
 
         /**
          * Initial settings for release version
          */
         fun init() {
             if (readSettings() == null) {
-                writeSettings(ISettings())
+                writeSettings(SettingsResponse())
             }
         }
 
-        fun writeSettings(settings: ISettings) {
+        fun writeSettings(settingsResponse: SettingsResponse) {
             if (SettingsUtil.isDebugVersion) {
-                Paper.book().write(DEBUG_SETTINGS_BOOK, settings)
+                Paper.book().write(DEBUG_SETTINGS_BOOK, settingsResponse)
             } else {
-                Paper.book().write(RELEASE_SETTINGS_BOOK, settings)
+                Paper.book().write(RELEASE_SETTINGS_BOOK, settingsResponse)
             }
         }
 
-        fun readSettings(): ISettings? {
+        fun readSettings(): SettingsResponse? {
             return if (SettingsUtil.isDebugVersion) {
                 Paper.book().read(DEBUG_SETTINGS_BOOK, null)
             } else {

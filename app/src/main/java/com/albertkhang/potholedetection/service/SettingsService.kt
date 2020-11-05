@@ -1,6 +1,6 @@
 package com.albertkhang.potholedetection.service
 
-import com.albertkhang.potholedetection.model.settings.ISettings
+import com.albertkhang.potholedetection.model.response.SettingsResponse
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -18,5 +18,5 @@ interface SettingsService {
     fun getVersion(@Path("setting_type") setting_type: String): Call<Int>
 
     @GET("{setting_type}.json")
-    fun getAll(@Path("setting_type") setting_type: String): Call<ISettings>
+    fun getAll(@Path("setting_type") setting_type: String): Call<SettingsResponse>
 }

@@ -1,7 +1,7 @@
 package com.albertkhang.potholedetection.util
 
 import com.albertkhang.potholedetection.service.SettingsService
-import com.albertkhang.potholedetection.model.settings.ISettings
+import com.albertkhang.potholedetection.model.response.SettingsResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -44,13 +44,13 @@ class SettingsUtil {
      * @callback onResponse
      * @callback onFailure
      */
-    fun getSettings(callback: Callback<ISettings>) {
-        mSettingsService.getAll(getCurrentSettingType()).enqueue(object : Callback<ISettings> {
-            override fun onResponse(call: Call<ISettings>, response: Response<ISettings>) {
+    fun getSettings(callback: Callback<SettingsResponse>) {
+        mSettingsService.getAll(getCurrentSettingType()).enqueue(object : Callback<SettingsResponse> {
+            override fun onResponse(call: Call<SettingsResponse>, response: Response<SettingsResponse>) {
                 callback.onResponse(call, response)
             }
 
-            override fun onFailure(call: Call<ISettings>, throwable: Throwable) {
+            override fun onFailure(call: Call<SettingsResponse>, throwable: Throwable) {
                 callback.onFailure(call, throwable)
             }
         })

@@ -9,10 +9,10 @@ data class IPothole(
     var iri: Float = 0f,
     var speed: Float = 0f,
 ) {
-    var quality: String = if (speed >= LocalDatabaseUtil.readSettings()!!.filter.minSpeed) {
-        if (iri <= LocalDatabaseUtil.readSettings()!!.filter.averageMilestone) {
+    var quality: String = if (speed >= LocalDatabaseUtil.readSettings()!!.filterResponse.minSpeed) {
+        if (iri <= LocalDatabaseUtil.readSettings()!!.filterResponse.averageMilestone) {
             "G"
-        } else if (iri <= LocalDatabaseUtil.readSettings()!!.filter.badMilestone) {
+        } else if (iri <= LocalDatabaseUtil.readSettings()!!.filterResponse.badMilestone) {
             "A"
         } else {
             "B"

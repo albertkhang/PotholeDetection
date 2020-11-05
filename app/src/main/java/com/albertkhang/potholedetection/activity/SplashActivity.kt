@@ -2,23 +2,19 @@ package com.albertkhang.potholedetection.activity
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.CountDownTimer
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.view.View.VISIBLE
-import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.service.SettingsService.Companion.SETTING_SERVICE_TAG
-import com.albertkhang.potholedetection.model.settings.ISettings
+import com.albertkhang.potholedetection.model.response.SettingsResponse
 import com.albertkhang.potholedetection.notification.DetectingNotification
 import com.albertkhang.potholedetection.service.SettingsService.Companion.isLogAll
 import com.albertkhang.potholedetection.util.LocalDatabaseUtil
 import com.albertkhang.potholedetection.util.NetworkUtil
 import com.albertkhang.potholedetection.util.PermissionUtil
 import com.albertkhang.potholedetection.util.SettingsUtil
-import kotlinx.android.synthetic.main.activity_splash.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -72,8 +68,8 @@ class SplashActivity : AppCompatActivity() {
 //        }
 
         val settingsUtil = SettingsUtil()
-        settingsUtil.getSettings(object : Callback<ISettings> {
-            override fun onResponse(call: Call<ISettings>, response: Response<ISettings>) {
+        settingsUtil.getSettings(object : Callback<SettingsResponse> {
+            override fun onResponse(call: Call<SettingsResponse>, response: Response<SettingsResponse>) {
                 if (response.code() == 200) {
                     val newSettings = response.body()
                     logAllSettings(newSettings.toString())
@@ -107,7 +103,7 @@ class SplashActivity : AppCompatActivity() {
                 }
             }
 
-            override fun onFailure(call: Call<ISettings>, throwable: Throwable) {
+            override fun onFailure(call: Call<SettingsResponse>, throwable: Throwable) {
                 Log.d(SETTING_SERVICE_TAG, throwable.message.toString())
             }
 
