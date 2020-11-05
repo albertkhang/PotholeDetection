@@ -96,8 +96,6 @@ class FileUtil {
         }
 
         fun writeRaw(context: Context, fileName: String, data: IDatabase): Boolean {
-            // TODO: can optimize here
-
             try {
                 val folder = File("${context.externalCacheDir}/$FOLDER")
                 folder.mkdirs()

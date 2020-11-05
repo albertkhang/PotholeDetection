@@ -129,7 +129,7 @@ class DetectingNotification : Service() {
             val mainHandler = Handler(Looper.getMainLooper())
             val uploadTimeInterval = LocalDatabaseUtil.readSettings()!!.uploadDataInterval
 
-//            FilterUtil.run(context)
+            FilterUtil.run(context)
 
             // TODO: uncomment this
 //            mainHandler.postDelayed(object : Runnable {

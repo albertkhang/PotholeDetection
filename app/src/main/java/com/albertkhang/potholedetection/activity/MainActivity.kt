@@ -63,6 +63,27 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         root_view.removeView(mPreparingMapProgress)
 
+//        val result = FloatArray(4)
+//        Location.distanceBetween(
+//            10.757096499999998,
+//            106.7179364,
+//            10.757101262660855,
+//            106.71792628559059,
+//            result
+//        )
+//
+//        Log.d(TAG, "result=${result[0]}")
+//
+//        Location.distanceBetween(
+//            10.757091407089396,
+//            106.71794652134589,
+//            10.757096499999998,
+//            106.7179364,
+//            result
+//        )
+//
+//        Log.d(TAG, "result=${result[0]}")
+
 //        val location = LinkedList<Int>()
 //        location.add(1)
 //        location.add(4)

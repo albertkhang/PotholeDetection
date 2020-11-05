@@ -8,7 +8,8 @@ import com.google.android.gms.maps.model.LatLng
  * @Description A list of roads is not a good road
  */
 data class RoadEntry(
-    val location: LatLng,
+    val startLocation: LatLng,
+    val endLocation: LatLng,
     val placeId: String,
     val iri: Float
 )

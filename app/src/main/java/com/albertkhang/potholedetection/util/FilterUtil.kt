@@ -8,11 +8,11 @@ import com.albertkhang.potholedetection.model.cloud_database.IPothole
 import com.albertkhang.potholedetection.model.entry.AccelerometerEntry
 import com.albertkhang.potholedetection.model.entry.LocalEntry
 import com.albertkhang.potholedetection.model.entry.LocationEntry
+import com.albertkhang.potholedetection.model.entry.RoadEntry
 import com.albertkhang.potholedetection.model.local_database.IAGVector
 import com.albertkhang.potholedetection.model.local_database.IDatabase
 import com.albertkhang.potholedetection.model.local_database.ILocation
 import com.google.android.gms.maps.model.LatLng
-import com.google.gson.Gson
 import java.util.*
 
 class FilterUtil {
@@ -42,39 +42,63 @@ class FilterUtil {
             return results[0]
         }
 
-        private fun roadsDetect(locationEntries: LinkedList<LocationEntry>): LinkedList<LinkedList<LocationEntry>> {
-            val roads = LinkedList<LinkedList<LocationEntry>>()
+        private fun roadsDetect(mixedEntries: LinkedList<LocalEntry>): LinkedList<LinkedList<LocalEntry>> {
+            val roads = LinkedList<LinkedList<LocalEntry>>()
 
-            // TODO: set setting this
-            val stopRecordingInterval = 1000 * 60 * 5 // 5 min
-            val minDistanceBetween2Points = 30 // 30 meter
+            var start: LocationEntry? = null
+            var end: LocationEntry?
+            val accelerometerEntries = LinkedList<AccelerometerEntry>()
 
-            if (locationEntries.size > 2) {
-                roads.add(LinkedList<LocationEntry>())
-                roads.last.add(locationEntries.first)
+            mixedEntries.forEach {
+                if (it is LocationEntry) {
+                    if (start == null) {
+                        start = it
+                    } else {
+                        end = it
 
-                var i = 1
-                var timestampInterval: Long
-                var distance: Float
-                var start: LocationEntry
-                var end: LocationEntry
+                        if (accelerometerEntries.isNotEmpty()) {
+                            roads.add(LinkedList<LocalEntry>())
 
-                while (i < locationEntries.size) {
-                    start = locationEntries[i - 1]
-                    end = locationEntries[i]
+                            roads.last.add(start!!)
+                            roads.last.addAll(accelerometerEntries)
+                            roads.last.add(end!!)
+                        }
 
-                    timestampInterval = end.timestamp - start.timestamp
-                    distance = distanceBetween(start.location, end.location)
-
-                    if (timestampInterval >= stopRecordingInterval || distance > minDistanceBetween2Points) {
-                        roads.add(LinkedList<LocationEntry>())
+                        start = it
+                        end = null
+                        accelerometerEntries.clear()
                     }
-
-                    roads.last.add(locationEntries[i])
-
-                    i++
+                } else if (it is AccelerometerEntry) {
+                    accelerometerEntries.add(it)
                 }
             }
+
+//            mixedEntries.forEach {
+//                if (it is LocationEntry) {
+//                    if (start == null) {
+//                        start = it
+//                    } else {
+//                        end = it
+//
+//                        if (sumIRI != 0f) {
+//                            val iri = sumIRI / sizeIRI
+//
+//                            if (iri > averageIRI) {
+//                                roads.add(RoadEntry(start!!.location, end!!.location, "", iri))
+//                            }
+//
+//                            sumIRI = 0f
+//                            sizeIRI = 0
+//                        }
+//
+//                        start = it
+//                        end = null
+//                    }
+//                } else if (it is AccelerometerEntry) {
+//                    sumIRI += it.iri
+//                    sizeIRI++
+//                }
+//            }
 
             return roads
         }
@@ -101,9 +125,8 @@ class FilterUtil {
             }
         }
 
-        private fun readLocationCache(context: Context): LinkedList<LinkedList<LocationEntry>> {
-            val locationEntries = FileUtil.readLocationCache(context)
-            return roadsDetect(locationEntries)
+        private fun readLocationCache(context: Context): LinkedList<LocationEntry> {
+            return FileUtil.readLocationCache(context)
         }
 
         private fun readAccelerometerCache(context: Context): LinkedList<AccelerometerEntry> {
@@ -111,10 +134,10 @@ class FilterUtil {
         }
 
         private fun removeUnusedAccelerometerAtLast(
-            roads: LinkedList<LinkedList<LocationEntry>>,
+            locationEntries: LinkedList<LocationEntry>,
             accelerometerEntries: LinkedList<AccelerometerEntry>
         ) {
-            val lastTimestamp = roads.last.last.timestamp
+            val lastTimestamp = locationEntries.last.timestamp
             while (accelerometerEntries.last.timestamp >= lastTimestamp) {
                 accelerometerEntries.removeLast()
             }
@@ -122,138 +145,68 @@ class FilterUtil {
 
         fun run(context: Context) {
             Thread {
+                Log.d(TAG, "run new thread=${Thread.currentThread()}")
                 // TODO: start new thread
 
-                val roads = readLocationCache(context)
-                Log.d(TAG, "roads size=${roads.size}")
+                val locationEntries = readLocationCache(context)
+                Log.d(TAG, "locationEntries size=${locationEntries.size}")
 
-                val accelerometerEntries = readAccelerometerCache(context)
-                Log.d(TAG, "accelerometerEntries size=${accelerometerEntries.size}")
-
-                if (roads.size == 0) {
+                if (locationEntries.size == 0) {
                     if (isDeleteCacheFile) {
                         FileUtil.deleteAllCacheFile(context)
                     }
                     return@Thread
                 }
 
-                removeUnusedAccelerometerAtLast(roads, accelerometerEntries)
+                val accelerometerEntries = readAccelerometerCache(context)
+                removeUnusedAccelerometerAtLast(locationEntries, accelerometerEntries)
+                Log.d(TAG, "accelerometerEntries size=${accelerometerEntries.size}")
 
-                val mixedEntries = LinkedList<LocalEntry>()
-                roads.forEach {
-                    Log.d(TAG, "index=${roads.indexOf(it)}, size=${it.size}")
-                    mixedEntries.clear()
+                val mixedEntries = mixEntries(locationEntries, accelerometerEntries)
+                Log.d(TAG, "mixedEntries size=${mixedEntries.size}")
 
-                    mixedEntries.add(it.first)
+                val roads = roadsDetect(mixedEntries)
+                Log.d(TAG, "roads size=${roads.size}")
+
+                val localEntries = roads.first
+                localEntries.forEach {
+                    Log.d(TAG, "$it")
+                }
+                
+            }.start()
+        }
+
+        private fun mixEntries(
+            locationEntries: LinkedList<LocationEntry>,
+            accelerometerEntries: LinkedList<AccelerometerEntry>
+        ): LinkedList<LocalEntry> {
+            val mixedEntries = LinkedList<LocalEntry>()
+
+            var j = 0
+            val accelerometerSize = accelerometerEntries.size
+
+            var i = 0
+            val locationSize = locationEntries.size
+
+            while (i < locationSize) {
+                if (j == accelerometerSize) {
+                    break
                 }
 
-//                var isCacheEmpty = false
-//
-//                // read IAGVector data from cache file
-//                val ag = read(
-//                    context,
-//                    LocalDatabaseUtil.CACHE_ACCELEROMETER_FILE_NAME
-//                ) as List<IAGVector>
-//                if (ag.isEmpty()) {
-//                    isCacheEmpty = true
-//                }
-//
-//                // read ILocation data from cache file
-//                val l =
-//                    read(context, LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME) as List<ILocation>
-//
-//                if (l.isEmpty()) {
-//                    isCacheEmpty = true
-//                }
-//
-//                if (isCacheEmpty) {
-//                    if (showLog)
-//                        Log.d(TAG, "Cache file is empty, return thread.")
-//
-//                    return@Thread
-//                } else {
-//                    if (showLog)
-//                        Log.d(TAG, "Read cache file.")
-//                }
-//
-//                // remove AGVector Redundant
-//                // ================================================================
-//                // firstLocationTimestamp < list IAGVector < lastLocationTimestamp
-//                // ================================================================
-//
-//                val location = LinkedList<ILocation>()
-//                location.addAll(l)
-//
-//                val agVector = LinkedList<IAGVector>()
-//                agVector.addAll(ag)
-//
-//                removeAGVectorRedundant(
-//                    location.first.timestamps,
-//                    location.last.timestamps,
-//                    agVector
-//                )
-//
-//                if (showLog)
-//                    Log.d(TAG, "remove AG Vector Redundant")
-//
-//                // now | firstLocationTimestamp < list IAGVector < lastLocationTimestamp |
-//
-//                val mixed = getMixedData(agVector, location)
-//
-//                val data = filter(mixed)
-//
-//                if (showLog)
-//                    Log.d(TAG, "filtered")
-//
-//                if (data.isNotEmpty()) {
-//                    if (NetworkUtil.isNetworkAvailable(context)) {
-//                        Log.d(TAG, "Network available. Preparing to upload.")
-//
-//                        // convert data to json before upload
-//                        val userPothole = IUserPothole("albertkhang", Gson().toJson(data.toArray()))
-//
-//                        // Upload data to firebase
-//                        mCloudDatabaseUtil.write(
-//                            userPothole
-//                        ) {
-//                            if (showLog) {
-//                                Log.d(TAG, "Uploaded ${it.result}")
-//                            }
-//                        }
-//
-//                        // Delete cache files after upload
-//                        if (showLog)
-//                            if (isDeleteCacheFile) {
-//                                if (LocalDatabaseUtil.deleteAllCacheFile(context)) {
-//                                    Log.d(TAG, "Deleted cache files success.")
-//                                } else {
-//                                    Log.d(TAG, "Deleted cache files error.")
-//                                }
-//                            }
-//
-//                        // be used for test
-//                        if (isWriteFilteredCacheFile) {
-//                            writeCacheFile(context, data)
-//                        }
-//                    } else {
-//                        Log.d(TAG, "Network unavailable. Write to filter cache file.")
-//
-//                        // TODO: lưu dữ liệu xuống nếu không có mạng, khi có mạng thì upload sau
-//                        // TODO: xử lý netowrk status listener bên DetectingNotification
-//                        writeCacheFile(context, data)
-//                    }
-//                } else {
-//                    if (showLog)
-//                        Log.d(TAG, "Data is empty. Not upload!")
-//                }
-//
-//                data.clear()
-//                mixed.clear()
-//                location.clear()
-//                agVector.clear()
-//
-//                Log.d(TAG, "thread=${Thread.currentThread()} done.")
-            }.start()
+                if (locationEntries[i].timestamp < accelerometerEntries[j].timestamp) {
+                    mixedEntries.add(locationEntries[i])
+                    i++
+                } else {
+                    mixedEntries.add(accelerometerEntries[j])
+                    j++
+                }
+            }
+
+            if (mixedEntries.last is AccelerometerEntry) {
+                mixedEntries.add(locationEntries[i])
+            }
+
+            return mixedEntries
         }
 
         /**
