@@ -31,6 +31,14 @@ class FilterUtil {
 
         private val mCloudDatabaseUtil = CloudDatabaseUtil()
 
+        // TODO: set this to setting
+        private const val maxLatLngPoint = 50
+
+        private var mRetrofit: Retrofit? = null
+        private var mSnapToRoadsService: SnapToRoadsService? = null
+
+        private var mSnapToRoadsCallback: SnapToRoadsCallback? = null
+
         /**
          * @unit meter
          */
@@ -181,40 +189,41 @@ class FilterUtil {
 
                     val points = getPoints(roads)
                     Log.d(TAG, "points size=${points.size}")
+                    for (i in points.indices) {
+                        Log.d(TAG, "[$i] size=${points[i].size}")
+                    }
 
-                    val requestAmount = (points.size / 100) + 1
-                    Log.d(TAG, "requestAmount=$requestAmount")
+                    snapToRoads(context, points, object : OnSnapToRoadsFinish {
+                        override fun onSnapToRoadsFinish(
+                            isSuccess: Boolean,
+                            snappedPoints: LinkedList<LinkedList<SnapToRoadsResponse.SnappedPointResponse>>
+                        ) {
+                            if (isSuccess) {
+                                Log.d(TAG, "snapToRoads success size=${snappedPoints.size}")
 
-//                    var requestCount = 0
-//                    getOnSnapToRoads(points, object : Callback<SnapToRoadsResponse> {
-//                        override fun onResponse(
-//                            call: Call<SnapToRoadsResponse>,
-//                            response: Response<SnapToRoadsResponse>
-//                        ) {
-//                            if (response.code() == 200) {
-//                                if (response.body() != null) {
-//                                    val snappedPoints =
-//                                        response.body()!!.snappedPoints
-//
-//
-//                                } else {
-//                                    Log.d(TAG, "snapToRoadsResponse == null")
+
+//                                var start: Int
+//                                var end: Int
+//                                var count = 0
+
+//                                for (i in snappedPoints.indices) {
+//                                    if (snappedPoints[i].originalIndex % 2 == 0) {
+//                                        start = i
+////                                        Log.d(TAG, "i=$i")
+//                                    } else if (snappedPoints[i].originalIndex % 2 == 1) {
+//                                        end = i
+//                                        count++
+//                                    } else {
+//                                        Log.d(TAG, "i=$i")
+//                                    }
 //                                }
-//                            } else {
-//                                Log.d(TAG, "response code=${response.code()}")
-//                            }
-//                        }
-//
-//                        override fun onFailure(
-//                            call: Call<SnapToRoadsResponse>,
-//                            throwable: Throwable
-//                        ) {
-//                            Log.d(TAG, throwable.message.toString())
-//                        }
-//
-//                    })
 
-                    // TODO: xử lý lấy snap to roads bất đồng bộ
+//                                Log.d(TAG, "count=$count")
+                            } else {
+                                Log.d(TAG, "snapToRoads failure")
+                            }
+                        }
+                    })
                 } else {
                     // No Connection
 
@@ -225,6 +234,125 @@ class FilterUtil {
                     }
                 }
             }.start()
+        }
+
+        private fun snapToRoads(
+            context: Context,
+            points: LinkedList<LinkedList<LatLng>>,
+            callback: OnSnapToRoadsFinish
+        ) {
+            val snappedPoints: Array<LinkedList<SnapToRoadsResponse.SnappedPointResponse>?> =
+                arrayOfNulls(points.size)
+
+            var isSuccess = true
+
+            val requestAmount = points.size
+            var responseAmount = 0
+
+            var failureCount = 0
+
+            if (mSnapToRoadsCallback == null) {
+                mSnapToRoadsCallback = object : SnapToRoadsCallback {
+                    override fun onResponse(id: Int, response: Response<SnapToRoadsResponse>) {
+                        //                        Log.d(
+//                            TAG,
+//                            "onResponse received: ${responseAmount + 1}/${requestAmount}"
+//                        )
+
+                        if (response.code() == 200) {
+                            if (response.body() != null) {
+                                val snappedResponse =
+                                    response.body()!!.snappedPoints
+
+                                val linkedListPoints =
+                                    LinkedList<SnapToRoadsResponse.SnappedPointResponse>()
+
+                                snappedResponse.forEach {
+                                    linkedListPoints.add(it)
+                                }
+
+                                snappedPoints[id] = linkedListPoints
+
+                                Log.d(
+                                    TAG,
+                                    "[$id] size=${snappedResponse.size}, received: ${responseAmount + 1}/${requestAmount}"
+                                )
+                            } else {
+                                Log.d(TAG, "[$id] body == null")
+                            }
+                        } else {
+                            Log.d(TAG, "[$id] code=${response.code()}")
+                            isSuccess = false
+                        }
+
+                        responseAmount++
+                        if (requestAmount == responseAmount) {
+                            val data =
+                                LinkedList<LinkedList<SnapToRoadsResponse.SnappedPointResponse>>()
+
+                            snappedPoints.forEach {
+                                data.add(it!!)
+                            }
+
+                            callback.onSnapToRoadsFinish(isSuccess, data)
+                        }
+                    }
+
+                    override fun onFailure(id: Int, throwable: Throwable) {
+                        failureCount++
+
+                        Log.d(
+                            TAG,
+                            "[$id] onFailure received: ${responseAmount}/${requestAmount}, $throwable"
+                        )
+
+                        if (NetworkUtil.isNetworkAvailable(context)) {
+                            getOnSnapToRoads(id, points[id], this)
+                        } else {
+                            isSuccess = false
+                            return
+                        }
+                    }
+                }
+            }
+
+            for (i in points.indices) {
+                getOnSnapToRoads(i, points[i], mSnapToRoadsCallback!!)
+            }
+        }
+
+        private interface SnapToRoadsCallback {
+            fun onResponse(id: Int, response: Response<SnapToRoadsResponse>)
+            fun onFailure(id: Int, throwable: Throwable)
+        }
+
+        private interface OnSnapToRoadsFinish {
+            fun onSnapToRoadsFinish(
+                isSuccess: Boolean,
+                snappedPoints: LinkedList<LinkedList<SnapToRoadsResponse.SnappedPointResponse>>
+            )
+        }
+
+        /**
+         * @maxPoints 100 per LatLng is 2 points
+         */
+        private fun getOnSnapToRoads(
+            id: Int,
+            points: LinkedList<LatLng>,
+            callback: SnapToRoadsCallback
+        ) {
+            getOnSnapToRoads(points, object : Callback<SnapToRoadsResponse> {
+                override fun onResponse(
+                    call: Call<SnapToRoadsResponse>,
+                    response: Response<SnapToRoadsResponse>
+                ) {
+                    callback.onResponse(id, response)
+                }
+
+                override fun onFailure(call: Call<SnapToRoadsResponse>, t: Throwable) {
+                    callback.onFailure(id, t)
+                }
+            })
         }
 
         private fun firstIRIFilter(roads: LinkedList<LinkedList<LocalEntry>>) {
@@ -261,24 +389,50 @@ class FilterUtil {
             }
         }
 
-        private fun getPoints(roads: LinkedList<LinkedList<LocalEntry>>): LinkedList<LatLng> {
-            val points = LinkedList<LatLng>()
+        private fun getPoints(roads: LinkedList<LinkedList<LocalEntry>>): LinkedList<LinkedList<LatLng>> {
+            val points = LinkedList<LinkedList<LatLng>>()
+
+            var count = 0
+            points.add(LinkedList<LatLng>())
 
             roads.forEach {
                 val locationEntryFirst = it.first as LocationEntry
                 val locationEntryLast = it.last as LocationEntry
 
-                points.add(locationEntryFirst.location)
-                points.add(locationEntryLast.location)
+                if (count == maxLatLngPoint) {
+                    points.add(LinkedList<LatLng>())
+                    count = 0
+                }
+                points.last.add(locationEntryFirst.location)
+                points.last.add(locationEntryLast.location)
+                count++
             }
 
             return points
         }
 
+        private fun getSnapToRoadsService(): SnapToRoadsService {
+            if (mRetrofit == null) {
+                mRetrofit = Retrofit.Builder()
+                    .baseUrl(SnapToRoadsService.URL)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build()
+            }
+
+            if (mSnapToRoadsService == null) {
+                mSnapToRoadsService = mRetrofit!!.create(SnapToRoadsService::class.java)
+            }
+
+            return mSnapToRoadsService!!
+        }
+
         /**
-         * @maxPoints 100
+         * @maxPoints 100 per LatLng is 2 points
          */
-        fun getOnSnapToRoads(points: LinkedList<LatLng>, callback: Callback<SnapToRoadsResponse>) {
+        private fun getOnSnapToRoads(
+            points: LinkedList<LatLng>,
+            callback: Callback<SnapToRoadsResponse>
+        ) {
             var s = ""
             val size = points.size
             for (i in points.indices) {
@@ -288,13 +442,9 @@ class FilterUtil {
                     s += "|"
                 }
             }
+//                Log.d(TAG, "[$id] sent $size points.")
 
-            val retrofit: Retrofit = Retrofit.Builder()
-                .baseUrl(SnapToRoadsService.URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
-
-            val service = retrofit.create(SnapToRoadsService::class.java)
+            val service = getSnapToRoadsService()
 
             service.get(s).enqueue(object : Callback<SnapToRoadsResponse> {
                 override fun onResponse(
@@ -307,7 +457,6 @@ class FilterUtil {
                 override fun onFailure(call: Call<SnapToRoadsResponse>, throwable: Throwable) {
                     callback.onFailure(call, throwable)
                 }
-
             })
         }
 

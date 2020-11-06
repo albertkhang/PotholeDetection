@@ -16,8 +16,15 @@ class SnapToRoadsResponse {
 
         @SerializedName("placeId")
         var placeId: String = ""
+
         override fun toString(): String {
             return "SnappedPointResponse(location=$location, originalIndex=$originalIndex, placeId='$placeId')"
         }
     }
+
+    override fun toString(): String {
+        return "SnapToRoadsResponse(snappedPoints=$snappedPoints)"
+    }
+
+
 }
