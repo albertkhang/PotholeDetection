@@ -28,7 +28,6 @@ class FilterUtil {
 
         private const val minSpeed = 1.38889 // m/s = 5 km/h
         private const val isDeleteCacheFile = false // default: true
-        private const val isWriteFilteredCacheFile = false // default: falseee
 
         private val mCloudDatabaseUtil = CloudDatabaseUtil()
 
@@ -180,16 +179,46 @@ class FilterUtil {
                 if (NetworkUtil.isNetworkAvailable(context)) {
                     // Have Connection
 
-//                    val points = getPoints(roads)
-//                    Log.d(TAG, "points size=${points.size}")
+                    val points = getPoints(roads)
+                    Log.d(TAG, "points size=${points.size}")
+
+                    val requestAmount = (points.size / 100) + 1
+                    Log.d(TAG, "requestAmount=$requestAmount")
+
+//                    var requestCount = 0
+//                    getOnSnapToRoads(points, object : Callback<SnapToRoadsResponse> {
+//                        override fun onResponse(
+//                            call: Call<SnapToRoadsResponse>,
+//                            response: Response<SnapToRoadsResponse>
+//                        ) {
+//                            if (response.code() == 200) {
+//                                if (response.body() != null) {
+//                                    val snappedPoints =
+//                                        response.body()!!.snappedPoints
+//
+//
+//                                } else {
+//                                    Log.d(TAG, "snapToRoadsResponse == null")
+//                                }
+//                            } else {
+//                                Log.d(TAG, "response code=${response.code()}")
+//                            }
+//                        }
+//
+//                        override fun onFailure(
+//                            call: Call<SnapToRoadsResponse>,
+//                            throwable: Throwable
+//                        ) {
+//                            Log.d(TAG, throwable.message.toString())
+//                        }
+//
+//                    })
 
                     // TODO: xử lý lấy snap to roads bất đồng bộ
                 } else {
                     // No Connection
 
-                    if (isWriteFilteredCacheFile) {
-                        FileUtil.writeFilteredCache(context, roads)
-                    }
+                    FileUtil.writeFilteredCache(context, roads)
 
                     if (isDeleteCacheFile) {
                         FileUtil.deleteAllCacheFile(context)
