@@ -3,24 +3,26 @@ package com.albertkhang.potholedetection.util
 import android.content.Context
 import android.location.Location
 import android.util.Log
+import android.widget.Toast
 import com.albertkhang.potholedetection.model.IVector3D
 import com.albertkhang.potholedetection.model.cloud_database.IPothole
-import com.albertkhang.potholedetection.model.entry.AccelerometerEntry
-import com.albertkhang.potholedetection.model.entry.LocalEntry
-import com.albertkhang.potholedetection.model.entry.LocationEntry
-import com.albertkhang.potholedetection.model.entry.RoadEntry
+import com.albertkhang.potholedetection.model.entry.*
 import com.albertkhang.potholedetection.model.local_database.IAGVector
 import com.albertkhang.potholedetection.model.local_database.IDatabase
 import com.albertkhang.potholedetection.model.local_database.ILocation
 import com.albertkhang.potholedetection.model.response.SnapToRoadsResponse
 import com.albertkhang.potholedetection.service.SnapToRoadsService
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.android.gms.tasks.Task
+import com.google.firebase.firestore.DocumentReference
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
 class FilterUtil {
@@ -192,9 +194,6 @@ class FilterUtil {
 
                     val points = getPoints(roads)
                     Log.d(TAG, "points size=${points.size}")
-                    for (i in points.indices) {
-                        Log.d(TAG, "[$i] size=${points[i].size}")
-                    }
 
                     snapToRoads(context, points, object : OnSnapToRoadsFinish {
                         override fun onSnapToRoadsFinish(
@@ -206,6 +205,24 @@ class FilterUtil {
 
                                 val roadsEntries = getRoadEntries(roads, points, snappedPoints)
                                 Log.d(TAG, "roadsEntries size=${roadsEntries.size}")
+
+                                val cloudEntry =
+                                    CloudFirestoreEntry("albertkhang", roadsEntries.toList())
+
+                                mCloudDatabaseUtil.write(
+                                    cloudEntry
+                                ) {
+                                    Log.d(TAG, "Upload Success! id=${it.result.id}")
+                                    Toast.makeText(
+                                        context,
+                                        "Upload Success! id=${it.result.id}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+
+                                if (isDeleteCacheFile) {
+                                    FileUtil.deleteAllCacheFile(context)
+                                }
                             } else {
                                 Log.d(TAG, "snapToRoads failure")
                             }
@@ -227,29 +244,31 @@ class FilterUtil {
             roads: LinkedList<LinkedList<LocalEntry>>,
             points: LinkedList<LinkedList<LatLng>>,
             snappedPoints: LinkedList<LinkedList<SnapToRoadsResponse.SnappedPointResponse>>
-        ): LinkedList<LinkedList<RoadEntry>> {
+        ): LinkedList<RoadEntry> {
             val newPoints = fillMissedPoints(points, snappedPoints)
 
-            val roadsEntries = LinkedList<LinkedList<RoadEntry>>()
+            val roadsEntries = LinkedList<RoadEntry>()
             for (i in roads.indices) {
                 if (newPoints[i].size == 2) {
-                    roadsEntries.add(LinkedList<RoadEntry>())
-
                     val start = newPoints[i].first.location
                     val end = newPoints[i].last.location
-                    val placeID = newPoints[i].first.placeId
-                    val iris = LinkedList<Float>()
-                    roads[i].forEach {
-                        if (it is AccelerometerEntry) {
-                            iris.add(it.iri)
+
+                    if (distanceBetween(start, end) < 10) {
+                        val placeID = newPoints[i].first.placeId
+                        val iris = LinkedList<Float>()
+                        roads[i].forEach {
+                            if (it is AccelerometerEntry) {
+                                iris.add(it.iri)
+                            }
                         }
+
+                        val iri = getAverageIRI(iris)
+
+                        roadsEntries.add(RoadEntry(start, end, placeID, iri))
                     }
-
-                    val iri = getAverageIRI(iris)
-
-                    roadsEntries.last.add(RoadEntry(start, end, placeID, iri))
                 }
             }
+
 
             return roadsEntries
         }

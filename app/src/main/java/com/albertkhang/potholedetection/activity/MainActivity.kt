@@ -18,11 +18,9 @@ import androidx.core.content.ContextCompat
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.animation.AlphaAnimation
 import com.albertkhang.potholedetection.broadcast.NetworkChangeReceiver
+import com.albertkhang.potholedetection.model.entry.RoadEntry
 import com.albertkhang.potholedetection.model.local_database.IAGVector
 import com.albertkhang.potholedetection.model.local_database.ILocation
-import com.albertkhang.potholedetection.model.response.SnapToRoadsResponse
-import com.albertkhang.potholedetection.service.SettingsService
-import com.albertkhang.potholedetection.service.SnapToRoadsService
 import com.albertkhang.potholedetection.util.*
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -30,18 +28,10 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.JointType
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Polyline
-import com.google.android.gms.maps.model.RoundCap
+import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
+import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_main.*
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import java.util.*
 
 @SuppressLint("MissingPermission")
 // Checked permissions before go to this activity
@@ -68,145 +58,46 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun onMapReady() {
-//        onAddLinesReady {
-//            root_view.removeView(mPreparingMapProgress)
-//        }
-
-        root_view.removeView(mPreparingMapProgress)
-
-//        val points = LinkedList<LatLng>()
-//        points.add(LatLng(10.79209847, 106.69942079))
-//        points.add(LatLng(10.7920884, 106.69943616))
-//
-//        FilterUtil.getOnSnapToRoads(points, object : Callback<SnapToRoadsResponse> {
-//            override fun onResponse(
-//                call: Call<SnapToRoadsResponse>,
-//                response: Response<SnapToRoadsResponse>
-//            ) {
-//                if (response.code() == 200) {
-//                    if (response.body() != null) {
-//                        val snappedPoints = response.body()!!.snappedPoints
-//                        snappedPoints.forEach {
-//                            Log.d(TAG, "$it")
-//                        }
-//                    } else {
-//                        Log.d(TAG, "snapToRoadsResponse == null")
-//                    }
-//                } else {
-//                    Log.d(TAG, "response code=${response.code()}")
-//                }
-//            }
-//
-//            override fun onFailure(call: Call<SnapToRoadsResponse>, throwable: Throwable) {
-//                Log.d(TAG, throwable.message.toString())
-//            }
-//
-//        })
-
-//        val result = FloatArray(4)
-//        Location.distanceBetween(
-//            10.757096499999998,
-//            106.7179364,
-//            10.757101262660855,
-//            106.71792628559059,
-//            result
-//        )
-//
-//        Log.d(TAG, "result=${result[0]}")
-//
-//        Location.distanceBetween(
-//            10.757091407089396,
-//            106.71794652134589,
-//            10.757096499999998,
-//            106.7179364,
-//            result
-//        )
-//
-//        Log.d(TAG, "result=${result[0]}")
-
-//        val location = LinkedList<Int>()
-//        location.add(1)
-//        location.add(4)
-//        location.add(7)
-//        location.add(10)
-//        location.add(13)
-//
-//        val accelerometer = LinkedList<Int>()
-//        accelerometer.add(2)
-//        accelerometer.add(3)
-//        accelerometer.add(5)
-//        accelerometer.add(6)
-//        accelerometer.add(9)
-//        accelerometer.add(11)
-//
-//        val mixed = LinkedList<Int>()
-//
-//        var i = 0
-//        var j = 0
-//        while (i < location.size) {
-//            if (j == accelerometer.size) {
-//                break
-//            }
-//
-//            if (location[i] < accelerometer[j]) {
-//                mixed.add(location[i])
-//                i++
-//            } else {
-//                mixed.add(accelerometer[j])
-//                j++
-//            }
-//        }
-//
-//        for (c in i until location.size) {
-//            mixed.add(location[c])
-//        }
-//
-//        Log.d(TAG, "$mixed")
-
-//        mMap.addPolyline(
-//            PolylineOptions()
-//                .add(LatLng(10.757091407089394, 106.71794652134589))
-//                .add(LatLng(10.757101262660854, 106.71792628559059))
-//                .color(Color.GREEN)
-//                .width(10f)
-//        )
-
-//        mMap.addPolyline(
-//            PolylineOptions()
-//                .add(LatLng(10.757096499999998, 106.7179364))
-//                .add(LatLng(10.757101262660855, 106.71792628559059))
-//                .color(Color.BLUE)
-//        )
-
-//        moveToLocation(LatLng(10.757091407089394, 106.71794652134589))
+        onAddLinesReady {
+            root_view.removeView(mPreparingMapProgress)
+        }
     }
 
     private fun onAddLinesReady(objects: () -> Unit) {
-//        mCloudDatabaseUtil.read("albertkhang") {
-//            if (it.isSuccessful) {
-//                val documents = it.result.documents
-//                documents.forEach {
-////                    val username = it.data!!.get("username")
-//                    val s = it.data!!["data"] as String
-//                    val data = Gson().fromJson(s, Array<IPothole>::class.java)
-//
-//                    data.forEach {
-//                        // set min speed = 2.77778 m/s = 10 km/h
-//                        val polyline = mMap.addPolyline(
-//                            PolylineOptions()
-//                                .add(it.startLatLng)
-//                                .add(it.endLatLng)
-//                        )
-//
-//                        polyline.tag = it.quality
-//
-//                        stylePolyline(polyline)
-//                    }
-//                }
-//
-//                objects.invoke()
-//            }
-//        }
+        mCloudDatabaseUtil.read("albertkhang") {
+            if (it.isSuccessful) {
+                val documents = it.result.documents
+                documents.forEach {
+                    Log.d(TAG, "id=${it.id}")
+                    if (it.data != null) {
+                        val username = it.data!!["username"].toString()
+                        val s = it.data!!["roads"].toString()
+                        val roads = Gson().fromJson(s, Array<RoadEntry>::class.java)
+                        Log.d(TAG, "username=${username}, roads.size=${roads.size}")
+
+                        roads?.forEach {
+                            val polyline = mMap.addPolyline(
+                                PolylineOptions()
+                                    .add(it.startLocation)
+                                    .add(it.endLocation)
+                            )
+
+                            if (it.iri >= 0.2) {
+                                polyline.tag = "A"
+                            }
+
+                            if (it.iri >= 0.3) {
+                                polyline.tag = "B"
+                            }
+
+                            stylePolyline(polyline)
+                        }
+                    }
+                }
+
+                objects.invoke()
+            }
+        }
     }
 
     private val POLYLINE_STROKE_WIDTH_PX = 12

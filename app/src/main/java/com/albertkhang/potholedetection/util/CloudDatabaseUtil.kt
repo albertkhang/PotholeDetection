@@ -1,6 +1,8 @@
 package com.albertkhang.potholedetection.util
 
+import android.content.Context
 import com.albertkhang.potholedetection.model.cloud_database.IUserPothole
+import com.albertkhang.potholedetection.model.entry.CloudFirestoreEntry
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
@@ -34,6 +36,17 @@ class CloudDatabaseUtil {
                 onCompleteListener.onComplete(it)
             }
 
+    }
+
+    fun write(
+        cloudFirestoreEntry: CloudFirestoreEntry,
+        onCompleteListener: OnCompleteListener<DocumentReference>
+    ) {
+        db.collection(COLLECTION_DATA)
+            .add(cloudFirestoreEntry)
+            .addOnCompleteListener {
+                onCompleteListener.onComplete(it)
+            }
     }
 
     fun read(
