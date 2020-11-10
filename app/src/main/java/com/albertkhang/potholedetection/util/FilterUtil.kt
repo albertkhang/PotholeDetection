@@ -8,6 +8,7 @@ import com.albertkhang.potholedetection.model.cloud_database.IPothole
 import com.albertkhang.potholedetection.model.entry.AccelerometerEntry
 import com.albertkhang.potholedetection.model.entry.LocalEntry
 import com.albertkhang.potholedetection.model.entry.LocationEntry
+import com.albertkhang.potholedetection.model.entry.RoadEntry
 import com.albertkhang.potholedetection.model.local_database.IAGVector
 import com.albertkhang.potholedetection.model.local_database.IDatabase
 import com.albertkhang.potholedetection.model.local_database.ILocation
@@ -20,6 +21,7 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.*
+import kotlin.collections.HashMap
 
 class FilterUtil {
     companion object {
@@ -183,6 +185,7 @@ class FilterUtil {
 
                 firstIRIFilter(roads)
                 Log.d(TAG, "roads size=${roads.size}")
+                Log.d(TAG, "roads ${roads[0]}")
 
                 if (NetworkUtil.isNetworkAvailable(context)) {
                     // Have Connection
@@ -201,24 +204,8 @@ class FilterUtil {
                             if (isSuccess) {
                                 Log.d(TAG, "snapToRoads success size=${snappedPoints.size}")
 
-
-//                                var start: Int
-//                                var end: Int
-//                                var count = 0
-
-//                                for (i in snappedPoints.indices) {
-//                                    if (snappedPoints[i].originalIndex % 2 == 0) {
-//                                        start = i
-////                                        Log.d(TAG, "i=$i")
-//                                    } else if (snappedPoints[i].originalIndex % 2 == 1) {
-//                                        end = i
-//                                        count++
-//                                    } else {
-//                                        Log.d(TAG, "i=$i")
-//                                    }
-//                                }
-
-//                                Log.d(TAG, "count=$count")
+                                val roadsEntries = getRoadEntries(roads, points, snappedPoints)
+                                Log.d(TAG, "roadsEntries size=${roadsEntries.size}")
                             } else {
                                 Log.d(TAG, "snapToRoads failure")
                             }
@@ -234,6 +221,87 @@ class FilterUtil {
                     }
                 }
             }.start()
+        }
+
+        private fun getRoadEntries(
+            roads: LinkedList<LinkedList<LocalEntry>>,
+            points: LinkedList<LinkedList<LatLng>>,
+            snappedPoints: LinkedList<LinkedList<SnapToRoadsResponse.SnappedPointResponse>>
+        ): LinkedList<LinkedList<RoadEntry>> {
+            val newPoints = fillMissedPoints(points, snappedPoints)
+
+            val roadsEntries = LinkedList<LinkedList<RoadEntry>>()
+            for (i in roads.indices) {
+                if (newPoints[i].size == 2) {
+                    roadsEntries.add(LinkedList<RoadEntry>())
+
+                    val start = newPoints[i].first.location
+                    val end = newPoints[i].last.location
+                    val placeID = newPoints[i].first.placeId
+                    val iris = LinkedList<Float>()
+                    roads[i].forEach {
+                        if (it is AccelerometerEntry) {
+                            iris.add(it.iri)
+                        }
+                    }
+
+                    val iri = getAverageIRI(iris)
+
+                    roadsEntries.last.add(RoadEntry(start, end, placeID, iri))
+                }
+            }
+
+            return roadsEntries
+        }
+
+        private fun fillMissedPoints(
+            points: LinkedList<LinkedList<LatLng>>,
+            snappedPoints: LinkedList<LinkedList<SnapToRoadsResponse.SnappedPointResponse>>
+        ): LinkedList<LinkedList<SnapToRoadsResponse.SnappedPointResponse>> {
+            val newPoints = LinkedList<LinkedList<SnapToRoadsResponse.SnappedPointResponse>>()
+
+            val hashMap = HashMap<Int, LinkedList<SnapToRoadsResponse.SnappedPointResponse>>()
+
+            var key: Int
+            snappedPoints.forEach { list ->
+                key = -1
+
+                list.forEach {
+                    if (it.originalIndex != -1) {
+                        key = it.originalIndex
+                        hashMap[key] = LinkedList<SnapToRoadsResponse.SnappedPointResponse>()
+                    }
+
+                    hashMap[key]!!.add(it)
+                }
+                Log.d(TAG, "[${snappedPoints.indexOf(list)}] snappedPoints size=${list.size}")
+
+                for (i in points[snappedPoints.indexOf(list)].indices) {
+                    if (hashMap[i] == null) {
+                        hashMap[i] = LinkedList<SnapToRoadsResponse.SnappedPointResponse>()
+                    }
+                }
+
+                for (i in points[snappedPoints.indexOf(list)].indices step 2) {
+                    newPoints.add(LinkedList<SnapToRoadsResponse.SnappedPointResponse>())
+                    when {
+                        hashMap[i].isNullOrEmpty() -> {
+                            newPoints.last.add(SnapToRoadsResponse.SnappedPointResponse())
+                        }
+                        hashMap[i + 1].isNullOrEmpty() -> {
+                            newPoints.last.add(SnapToRoadsResponse.SnappedPointResponse())
+                        }
+                        else -> {
+                            newPoints.last.addAll(hashMap[i]!!)
+                            newPoints.last.add(hashMap[i + 1]!!.first)
+                        }
+                    }
+                }
+            }
+
+            hashMap.clear()
+
+            return newPoints
         }
 
         private fun snapToRoads(
@@ -357,7 +425,7 @@ class FilterUtil {
 
         private fun firstIRIFilter(roads: LinkedList<LinkedList<LocalEntry>>) {
             // TODO: set this to settings
-            val minFirstIRIFilter = 0.2 * 0.8
+            val minFirstIRIFilter = 0.2
 
             val iris = LinkedList<Float>()
             val removeEntries = LinkedList<LinkedList<LocalEntry>>()
