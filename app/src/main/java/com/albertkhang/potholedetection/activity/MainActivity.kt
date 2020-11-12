@@ -308,7 +308,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         val snackbar = Snackbar.make(root_view, "", Snackbar.LENGTH_INDEFINITE)
         mNetworkChangeReceiver = NetworkChangeReceiver()
         mNetworkChangeReceiver.setOnNetworkChangeListener(object :
-            NetworkChangeReceiver.OnNetworkChangeListener {
+            NetworkChangeReceiver.OnNetworkOnOffListener {
             override fun onNetworkOn() {
                 if (snackbar.isShown) {
                     snackbar.setText("Đã kết nối lại kết nối.")

@@ -31,7 +31,7 @@ class FilterUtil {
         private const val showLog = true
 
         private const val minSpeed = 1.38889 // m/s = 5 km/h
-        private const val isDeleteCacheFile = false // default: true
+        private const val isDeleteCacheFile = true // default: true
 
         private val mCloudDatabaseUtil = CloudDatabaseUtil()
 
@@ -157,10 +157,56 @@ class FilterUtil {
             }
         }
 
+        fun handleFilteredFiles(context: Context) {
+            Thread {
+                Log.d(TAG, "Filtered new thread=${Thread.currentThread()}")
+
+                val roads = FileUtil.readFilteredCache() ?: return@Thread
+                Log.d(TAG, "Filtered roads size=${roads.size}")
+
+                val points = getPoints(roads)
+                Log.d(TAG, "Filtered points size=${points.size}")
+
+                snapToRoads(context, points, object : OnSnapToRoadsFinish {
+                    override fun onSnapToRoadsFinish(
+                        isSuccess: Boolean,
+                        snappedPoints: LinkedList<LinkedList<SnapToRoadsResponse.SnappedPointResponse>>
+                    ) {
+                        if (isSuccess) {
+                            Log.d(TAG, "Filtered snapToRoads success size=${snappedPoints.size}")
+
+                            val roadsEntries = getRoadEntries(roads, points, snappedPoints)
+                            Log.d(TAG, "Filtered roadsEntries size=${roadsEntries.size}")
+
+                            val cloudEntry =
+                                CloudFirestoreEntry("albertkhang", roadsEntries.toList())
+
+                            mCloudDatabaseUtil.write(
+                                cloudEntry
+                            ) {
+                                Log.d(TAG, "Upload Filtered Success! id=${it.result.id}")
+                                Toast.makeText(
+                                    context,
+                                    "Upload Filtered Success! id=${it.result.id}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+
+                            if (isDeleteCacheFile) {
+                                FileUtil.deleteAllFilteredCache()
+                                Log.d(TAG, "deleteAllCacheFile")
+                            }
+                        } else {
+                            Log.d(TAG, "Filtered snapToRoads failure")
+                        }
+                    }
+                })
+            }.start()
+        }
+
         fun run(context: Context) {
             Thread {
                 Log.d(TAG, "run new thread=${Thread.currentThread()}")
-                // TODO: start new thread
 
                 val locationEntries = readLocationCache(context)
                 Log.d(TAG, "locationEntries size=${locationEntries.size}")
@@ -168,6 +214,7 @@ class FilterUtil {
                 if (locationEntries.size == 0) {
                     if (isDeleteCacheFile) {
                         FileUtil.deleteAllCacheFile(context)
+                        Log.d(TAG, "deleteAllCacheFile")
                     }
                     return@Thread
                 }
@@ -187,7 +234,6 @@ class FilterUtil {
 
                 firstIRIFilter(roads)
                 Log.d(TAG, "roads size=${roads.size}")
-                Log.d(TAG, "roads ${roads[0]}")
 
                 if (NetworkUtil.isNetworkAvailable(context)) {
                     // Have Connection
@@ -222,6 +268,7 @@ class FilterUtil {
 
                                 if (isDeleteCacheFile) {
                                     FileUtil.deleteAllCacheFile(context)
+                                    Log.d(TAG, "deleteAllCacheFile")
                                 }
                             } else {
                                 Log.d(TAG, "snapToRoads failure")
@@ -231,9 +278,11 @@ class FilterUtil {
                 } else {
                     // No Connection
 
-                    FileUtil.writeFilteredCache(context, roads)
+                    FileUtil.writeFilteredCache(roads)
+                    Log.d(TAG, "write filtered cache files!")
 
                     if (isDeleteCacheFile) {
+                        Log.d(TAG, "deleted all cache files!")
                         FileUtil.deleteAllCacheFile(context)
                     }
                 }

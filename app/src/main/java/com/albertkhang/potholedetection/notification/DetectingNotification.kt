@@ -16,6 +16,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.activity.MainActivity
+import com.albertkhang.potholedetection.broadcast.NetworkChangeReceiver
 import com.albertkhang.potholedetection.model.IVector3D
 import com.albertkhang.potholedetection.model.entry.AccelerometerEntry
 import com.albertkhang.potholedetection.model.entry.LocationEntry
@@ -42,6 +43,8 @@ class DetectingNotification : Service() {
 
         private lateinit var mAccelerometerSensor: AccelerometerSensor
         private lateinit var mLocationSensor: LocationSensor
+
+        private lateinit var mNetworkChangeReceiver: NetworkChangeReceiver
 
         private fun initSensors(context: Context) {
             // the last time record speed > 10 km/h
@@ -121,7 +124,7 @@ class DetectingNotification : Service() {
             val startIntent = Intent(context, DetectingNotification::class.java)
             ContextCompat.startForegroundService(context, startIntent)
             initSensors(context)
-//            mAccelerometerSensor.start()
+            initNetworkChangeListener()
             mLocationSensor.start()
             isStarted = true
 
@@ -130,22 +133,35 @@ class DetectingNotification : Service() {
             val uploadTimeInterval = LocalDatabaseUtil.readSettings()!!.uploadDataInterval
 
 //            FilterUtil.run(context)
+//            FilterUtil.handleFilteredFiles(context)
 
             // TODO: uncomment this
-//            mainHandler.postDelayed(object : Runnable {
-//                override fun run() {
-//                    if (isRunning) {
-//                        FilterUtil.run(context)
-//                        mainHandler.postDelayed(this, uploadTimeInterval)
-//                    }
-//                }
-//            }, uploadTimeInterval)
+            mainHandler.postDelayed(object : Runnable {
+                override fun run() {
+                    if (isRunning) {
+                        FilterUtil.run(context)
+                        mainHandler.postDelayed(this, uploadTimeInterval)
+                    }
+                }
+            }, uploadTimeInterval)
         }
 
         fun stopService(context: Context) {
             isRunning = false
             val stopIntent = Intent(context, DetectingNotification::class.java)
             context.stopService(stopIntent)
+        }
+
+        private fun initNetworkChangeListener() {
+            mNetworkChangeReceiver = NetworkChangeReceiver()
+            mNetworkChangeReceiver.setOnNetworkChangeListener(object :
+                NetworkChangeReceiver.OnNetworkChangeListener {
+                override fun onNetworkChangeListener(context: Context) {
+                    if (NetworkUtil.isNetworkAvailable(context)) {
+                        FilterUtil.handleFilteredFiles(context)
+                    }
+                }
+            })
         }
     }
 

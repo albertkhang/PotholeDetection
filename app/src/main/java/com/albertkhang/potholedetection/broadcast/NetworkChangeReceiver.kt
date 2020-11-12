@@ -16,15 +16,24 @@ class NetworkChangeReceiver : BroadcastReceiver() {
         context.unregisterReceiver(this)
     }
 
-    interface OnNetworkChangeListener {
+    interface OnNetworkOnOffListener {
         fun onNetworkOn()
         fun onNetworkOff()
     }
 
-    private var networkListener: OnNetworkChangeListener? = null
+    interface OnNetworkChangeListener {
+        fun onNetworkChangeListener(context: Context)
+    }
 
-    fun setOnNetworkChangeListener(networkListener: OnNetworkChangeListener) {
+    private var networkListener: OnNetworkOnOffListener? = null
+    private var onNetworkChangeListener: OnNetworkChangeListener? = null
+
+    fun setOnNetworkChangeListener(networkListener: OnNetworkOnOffListener) {
         this.networkListener = networkListener
+    }
+
+    fun setOnNetworkChangeListener(onNetworkChangeListener: OnNetworkChangeListener) {
+        this.onNetworkChangeListener = onNetworkChangeListener
     }
 
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -33,6 +42,10 @@ class NetworkChangeReceiver : BroadcastReceiver() {
                 networkListener!!.onNetworkOn()
             } else {
                 networkListener!!.onNetworkOff()
+            }
+
+            if (onNetworkChangeListener != null) {
+                onNetworkChangeListener!!.onNetworkChangeListener(context)
             }
         }
     }

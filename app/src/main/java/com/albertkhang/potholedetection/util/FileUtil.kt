@@ -14,11 +14,12 @@ import com.albertkhang.potholedetection.model.local_database.ILocation
 import com.albertkhang.potholedetection.util.LocalDatabaseUtil.Companion.CACHE_ACCELEROMETER_FILE_NAME
 import com.albertkhang.potholedetection.util.LocalDatabaseUtil.Companion.CACHE_LOCATION_FILE_NAME
 import com.google.gson.Gson
+import io.paperdb.Paper
 import java.io.*
-import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
+
 
 class FileUtil {
     @SuppressLint("SimpleDateFormat")
@@ -28,6 +29,7 @@ class FileUtil {
         private const val FOLDER = "potholedetection"
 
         private const val FILTERED_FOLDER = "filtered"
+        private const val FILTERED_CACHE = "filtered-cache"
 
         /**
          * be used for test
@@ -238,39 +240,41 @@ class FileUtil {
             }
         }
 
-        fun writeFilteredCache(
-            context: Context,
-            roads: LinkedList<LinkedList<LocalEntry>>
-        ): Boolean {
-            try {
-                val folder = File("${context.externalCacheDir}/$FOLDER")
-                folder.mkdirs()
+        fun readFilteredCache(): LinkedList<LinkedList<LocalEntry>>? {
+            val allBooks = Paper.book(FILTERED_CACHE).allKeys
+            Log.d(TAG, "allBooks size=${allBooks.size}")
 
-                val cacheFolder = File("${context.externalCacheDir}/$FOLDER/$FILTERED_FOLDER")
-                cacheFolder.mkdirs()
+            val roads: LinkedList<LinkedList<LocalEntry>>
+            if (allBooks.isNotEmpty()) {
+                roads = LinkedList<LinkedList<LocalEntry>>()
 
-                val fileName =
-                    "${getCurrentTimeFormat()}_${LocalDatabaseUtil.CACHE_FILTERED_FILE_NAME}"
+                var currentRoads: LinkedList<LinkedList<LocalEntry>>
+                allBooks.forEach {
+                    Log.d(TAG, "index=${allBooks.indexOf(it)}, name=$it")
 
-                val f =
-                    File("${context.externalCacheDir}/$FOLDER/$FILTERED_FOLDER/$fileName$POSTFIX")
-                if (!f.exists()) {
-                    f.createNewFile()
+                    currentRoads = Paper.book(FILTERED_CACHE).read(it)
+                    roads.addAll(currentRoads)
+                    Log.d(TAG, "index=${allBooks.indexOf(it)}, size=${currentRoads.size}")
                 }
+                Log.d(TAG, "roads size=${roads.size}")
 
-                val fileWriter = FileWriter(f, true)
-
-                val bw = BufferedWriter(fileWriter)
-                val out = PrintWriter(bw)
-                out.println(Gson().toJson(roads))
-                out.close()
-                fileWriter.close()
-
-                return true
-            } catch (e: Exception) {
-                Log.e(TAG, e.message.toString())
-                return false
+                return roads
+            } else {
+                return null
             }
+        }
+
+        fun writeFilteredCache(
+            roads: LinkedList<LinkedList<LocalEntry>>
+        ) {
+            val fileName =
+                "${getCurrentTimeFormat()}_${LocalDatabaseUtil.CACHE_FILTERED_FILE_NAME}"
+
+            Paper.book(FILTERED_CACHE).write(fileName, roads)
+        }
+
+        fun deleteAllFilteredCache() {
+            Paper.book(FILTERED_CACHE).destroy()
         }
 
         @SuppressLint("SimpleDateFormat")
@@ -295,8 +299,8 @@ class FileUtil {
                 val datas = ArrayList<IDatabase>()
 
                 val typeClass = when (type) {
-                    LocalDatabaseUtil.CACHE_ACCELEROMETER_FILE_NAME -> IAGVector::class.java
-                    LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME -> ILocation::class.java
+                    CACHE_ACCELEROMETER_FILE_NAME -> IAGVector::class.java
+                    CACHE_LOCATION_FILE_NAME -> ILocation::class.java
                     else -> return datas.toList()
                 }
 
@@ -337,8 +341,8 @@ class FileUtil {
                 val folder = File("${context.externalCacheDir}/$FOLDER")
                 folder.mkdirs()
 
-                val agName = LocalDatabaseUtil.CACHE_ACCELEROMETER_FILE_NAME
-                val locationName = LocalDatabaseUtil.CACHE_LOCATION_FILE_NAME
+                val agName = CACHE_ACCELEROMETER_FILE_NAME
+                val locationName = CACHE_LOCATION_FILE_NAME
 
                 val f1 = File("${context.externalCacheDir}/$FOLDER/$agName$POSTFIX")
                 val f2 = File("${context.externalCacheDir}/$FOLDER/$locationName$POSTFIX")
