@@ -384,6 +384,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.setOnMapLoadedCallback {
             onMapReady()
         }
+        mMap.setMapStyle(
+            MapStyleOptions.loadRawResourceStyle(
+                this, R.raw.style_json))
     }
 
     override fun onResume() {
