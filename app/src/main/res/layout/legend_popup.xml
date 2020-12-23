@@ -40,22 +40,13 @@
         app:layout_constraintTop_toBottomOf="@id/horizontal_line">
 
         <FrameLayout
-            android:id="@+id/circleGood"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/legend_circle"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <FrameLayout
             android:id="@+id/circleAverage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:background="@drawable/legend_circle"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/circleGood" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <FrameLayout
             android:id="@+id/circleBad"
@@ -65,16 +56,6 @@
             android:background="@drawable/legend_circle"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintTop_toBottomOf="@id/circleAverage" />
-
-        <TextView
-            style="@style/BodyTextStyles"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="8dp"
-            android:text="Tốt"
-            app:layout_constraintBottom_toBottomOf="@id/circleGood"
-            app:layout_constraintLeft_toRightOf="@id/circleGood"
-            app:layout_constraintTop_toTopOf="@id/circleGood" />
 
         <TextView
             style="@style/BodyTextStyles"

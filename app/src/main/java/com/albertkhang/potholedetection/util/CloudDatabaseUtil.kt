@@ -54,7 +54,7 @@ class CloudDatabaseUtil {
         onCompleteListener: OnCompleteListener<QuerySnapshot>
     ) {
         db.collection(COLLECTION_GEOPOINTS)
-            .whereEqualTo("username", username)
+            .whereArrayContains("usernames", username)
             .get()
             .addOnCompleteListener {
                 onCompleteListener.onComplete(it)

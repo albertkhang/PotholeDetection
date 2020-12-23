@@ -1,6 +1,5 @@
 package com.albertkhang.potholedetection.activity
 
-import android.Manifest
 import android.animation.Animator
 import android.annotation.SuppressLint
 import android.app.AlertDialog
@@ -15,12 +14,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.animation.AlphaAnimation
 import com.albertkhang.potholedetection.broadcast.NetworkChangeReceiver
-import com.albertkhang.potholedetection.model.entry.RoadEntry
 import com.albertkhang.potholedetection.model.local_database.IAGVector
 import com.albertkhang.potholedetection.model.local_database.ILocation
 import com.albertkhang.potholedetection.util.*
@@ -29,7 +26,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.SignInButton
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -40,9 +36,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
-import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_main.*
-
 
 @SuppressLint("MissingPermission")
 // Checked permissions before go to this activity
@@ -70,7 +64,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         addControl()
         addEvent()
-//        FilterUtil.run(this)
     }
 
     private fun onMapReady() {
@@ -90,31 +83,56 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mCloudDatabaseUtil.read(username) {
             if (it.isSuccessful) {
                 val documents = it.result.documents
+
+                var iri: Float
+                var placeId: String
+
+                var startMap: HashMap<*, *>
+                var startLat: Double
+                var startLng: Double
+                var startLocation: LatLng
+
+                var endMap: HashMap<*, *>
+                var endLat: Double
+                var endLng: Double
+                var endLocation: LatLng
+
+                var polyline: Polyline
+
                 documents.forEach {
-                    Log.d(TAG, "id=${it.id}")
-                    if (it.data != null) {
-                        val username = it.data!!["username"].toString()
-                        val s = it.data!!["roads"].toString()
-                        val roads = Gson().fromJson(s, Array<RoadEntry>::class.java)
-                        Log.d(TAG, "username=${username}, roads.size=${roads.size}")
+                    val data = it.data
 
-                        roads?.forEach {
-                            val polyline = mMap.addPolyline(
-                                PolylineOptions()
-                                    .add(it.startLocation)
-                                    .add(it.endLocation)
-                            )
+                    if (data != null) {
+//                        Log.d(TAG, "id=${it.id}, data=$data")
 
-                            if (it.iri >= 0.2) {
-                                polyline.tag = "A"
-                            }
+                        iri = (data["iri"] as Double).toFloat()
+                        placeId = data["placeId"] as String
 
-                            if (it.iri >= 0.3) {
-                                polyline.tag = "B"
-                            }
+                        startMap = data["startLocation"] as HashMap<*, *>
+                        startLat = startMap["latitude"] as Double
+                        startLng = startMap["longitude"] as Double
+                        startLocation = LatLng(startLat, startLng)
 
-                            stylePolyline(polyline)
+                        endMap = data["endLocation"] as HashMap<*, *>
+                        endLat = endMap["latitude"] as Double
+                        endLng = endMap["longitude"] as Double
+                        endLocation = LatLng(endLat, endLng)
+
+                        polyline = mMap.addPolyline(
+                            PolylineOptions()
+                                .add(startLocation)
+                                .add(endLocation)
+                        )
+
+                        if (iri >= 0.2) {
+                            polyline.tag = "A"
                         }
+
+                        if (iri >= 0.3) {
+                            polyline.tag = "B"
+                        }
+
+                        stylePolyline(polyline)
                     }
                 }
 
@@ -361,12 +379,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mLegendView = inflater.inflate(R.layout.legend_popup, root_view, false)
 
         if (mLegendView != null) {
-            val goodColor = ContextCompat.getColor(this, R.color.colorGoodLegend)
             val averageColor = ContextCompat.getColor(this, R.color.colorAverageLegend)
             val badColor = ContextCompat.getColor(this, R.color.colorBadLegend)
-
-            mLegendView!!.findViewById<FrameLayout>(R.id.circleGood).background.colorFilter =
-                PorterDuffColorFilter(goodColor, PorterDuff.Mode.SRC)
 
             mLegendView!!.findViewById<FrameLayout>(R.id.circleAverage).background.colorFilter =
                 PorterDuffColorFilter(averageColor, PorterDuff.Mode.SRC)
