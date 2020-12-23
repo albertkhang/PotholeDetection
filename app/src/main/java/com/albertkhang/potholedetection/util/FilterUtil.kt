@@ -12,6 +12,8 @@ import com.albertkhang.potholedetection.model.local_database.IDatabase
 import com.albertkhang.potholedetection.model.local_database.ILocation
 import com.albertkhang.potholedetection.model.response.SnapToRoadsResponse
 import com.albertkhang.potholedetection.service.SnapToRoadsService
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.Task
@@ -42,6 +44,14 @@ class FilterUtil {
         private var mSnapToRoadsService: SnapToRoadsService? = null
 
         private var mSnapToRoadsCallback: SnapToRoadsCallback? = null
+
+        private var account: GoogleSignInAccount? = null
+        private var username: String = "anonymous"
+
+        fun resetUsername() {
+            account = null
+            username = "anonymous"
+        }
 
         /**
          * @unit meter
@@ -179,7 +189,7 @@ class FilterUtil {
                             Log.d(TAG, "Filtered roadsEntries size=${roadsEntries.size}")
 
                             val cloudEntry =
-                                CloudFirestoreEntry("albertkhang", roadsEntries.toList())
+                                CloudFirestoreEntry(username, roadsEntries.toList())
 
                             mCloudDatabaseUtil.write(
                                 cloudEntry
@@ -206,6 +216,11 @@ class FilterUtil {
 
         fun run(context: Context) {
             Thread {
+                account = GoogleSignIn.getLastSignedInAccount(context)
+                if (account != null) {
+                    username = account!!.email.toString()
+                }
+
                 Log.d(TAG, "run new thread=${Thread.currentThread()}")
 
                 val locationEntries = readLocationCache(context)
@@ -253,7 +268,7 @@ class FilterUtil {
                                 Log.d(TAG, "roadsEntries size=${roadsEntries.size}")
 
                                 val cloudEntry =
-                                    CloudFirestoreEntry("albertkhang", roadsEntries.toList())
+                                    CloudFirestoreEntry(username, roadsEntries.toList())
 
                                 mCloudDatabaseUtil.write(
                                     cloudEntry

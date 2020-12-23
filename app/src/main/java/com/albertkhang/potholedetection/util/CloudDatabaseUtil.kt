@@ -1,6 +1,5 @@
 package com.albertkhang.potholedetection.util
 
-import android.content.Context
 import com.albertkhang.potholedetection.model.cloud_database.IUserPothole
 import com.albertkhang.potholedetection.model.entry.CloudFirestoreEntry
 import com.google.android.gms.tasks.OnCompleteListener
@@ -17,6 +16,7 @@ class CloudDatabaseUtil {
 
     companion object {
         const val COLLECTION_DATA = "data"
+        const val COLLECTION_GEOPOINTS = "geopoints"
 
         private val db: FirebaseFirestore = Firebase.firestore
         private val settings = firestoreSettings {
@@ -53,7 +53,7 @@ class CloudDatabaseUtil {
         username: String,
         onCompleteListener: OnCompleteListener<QuerySnapshot>
     ) {
-        db.collection(COLLECTION_DATA)
+        db.collection(COLLECTION_GEOPOINTS)
             .whereEqualTo("username", username)
             .get()
             .addOnCompleteListener {

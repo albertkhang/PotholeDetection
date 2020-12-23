@@ -1,8 +1,11 @@
 package com.albertkhang.potholedetection.activity
 
+import android.Manifest
 import android.animation.Animator
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.app.Dialog
+import android.content.Intent
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
@@ -10,10 +13,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.RelativeLayout
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.animation.AlphaAnimation
@@ -22,6 +24,13 @@ import com.albertkhang.potholedetection.model.entry.RoadEntry
 import com.albertkhang.potholedetection.model.local_database.IAGVector
 import com.albertkhang.potholedetection.model.local_database.ILocation
 import com.albertkhang.potholedetection.util.*
+import com.bumptech.glide.Glide
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.SignInButton
+import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -29,9 +38,11 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_main.*
+
 
 @SuppressLint("MissingPermission")
 // Checked permissions before go to this activity
@@ -48,6 +59,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var mCloudDatabaseUtil: CloudDatabaseUtil
 
     private lateinit var mNetworkChangeReceiver: NetworkChangeReceiver
+    private lateinit var mGoogleSignInClient: GoogleSignInClient
+    private lateinit var gso: GoogleSignInOptions
+
+    private val RC_SIGN_IN = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +70,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         addControl()
         addEvent()
+//        FilterUtil.run(this)
     }
 
     private fun onMapReady() {
@@ -64,7 +80,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun onAddLinesReady(objects: () -> Unit) {
-        mCloudDatabaseUtil.read("albertkhang") {
+        val account = GoogleSignIn.getLastSignedInAccount(this)
+        var username = "anonymous"
+
+        if (account != null) {
+            username = account.email.toString()
+        }
+
+        mCloudDatabaseUtil.read(username) {
             if (it.isSuccessful) {
                 val documents = it.result.documents
                 documents.forEach {
@@ -153,6 +176,65 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             }
 
             addLegendView()
+        }
+
+        btnAccount.setOnClickListener {
+            signIn()
+        }
+
+        btnAccount.setOnLongClickListener {
+            showConfirmSignOutDialog()
+            true
+        }
+    }
+
+    private fun showConfirmSignOutDialog() {
+        val dialog = Dialog(this, R.style.RoundCornerDialog)
+        dialog.setContentView(R.layout.dialog_two_button)
+        dialog.findViewById<Button>(R.id.cancel).setOnClickListener {
+            dialog.dismiss()
+        }
+        dialog.findViewById<Button>(R.id.agree)
+            .setOnClickListener {
+                signOut()
+                dialog.dismiss()
+            }
+        dialog.findViewById<TextView>(R.id.title).text = "Đăng Xuất"
+        dialog.findViewById<TextView>(R.id.description).text =
+            "Bạn có chắc muốn đăng xuất?"
+        dialog.findViewById<Button>(R.id.cancel).text = "Không"
+        dialog.findViewById<Button>(R.id.agree).text = "Đăng xuất"
+        dialog.show()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        // Result returned from launching the Intent from GoogleSignInClient.getSignInIntent(...);
+        if (requestCode == RC_SIGN_IN) {
+            // The Task returned from this call is always completed, no need to attach
+            // a listener.
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+            handleSignInResult(task)
+        }
+    }
+
+    private fun handleSignInResult(completedTask: Task<GoogleSignInAccount>) {
+        try {
+            val account = completedTask.getResult(ApiException::class.java)
+            Toast.makeText(this, "SignIn", Toast.LENGTH_SHORT).show()
+            Log.d(
+                TAG,
+                "id=${account.id}, email=${account.email}, displayName=${account.displayName}"
+            )
+
+            // Signed in successfully, show authenticated UI.
+            updateUI(account)
+        } catch (e: ApiException) {
+            // The ApiException status code indicates the detailed failure reason.
+            // Please refer to the GoogleSignInStatusCodes class reference for more information.
+            Log.w(TAG, "signInResult:failed code=" + e.statusCode)
+            updateUI(null)
         }
     }
 
@@ -302,6 +384,53 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         mCloudDatabaseUtil = CloudDatabaseUtil()
+
+        gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .build()
+
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
+
+        val account = GoogleSignIn.getLastSignedInAccount(this)
+        if (account != null) {
+            Log.d(
+                TAG,
+                "id=${account.id}, email=${account.email}, displayName=${account.displayName}"
+            )
+        }
+        updateUI(account)
+    }
+
+    private fun updateUI(account: GoogleSignInAccount?) {
+        Log.d(TAG, "account=$account")
+        if (account == null) {
+            // SignIn UI
+            btnAccount.setImageResource(R.drawable.ic_sign_in)
+        } else {
+            Glide.with(this)
+                .load(account.photoUrl)
+                .circleCrop()
+                .placeholder(R.drawable.bg_white_circle)
+                .into(btnAccount)
+        }
+    }
+
+    private fun signIn() {
+        val account = GoogleSignIn.getLastSignedInAccount(this)
+        if (account == null) {
+            val signInIntent = mGoogleSignInClient.signInIntent
+            startActivityForResult(signInIntent, RC_SIGN_IN)
+        }
+    }
+
+    private fun signOut() {
+        val account = GoogleSignIn.getLastSignedInAccount(this)
+        if (account != null) {
+            mGoogleSignInClient.signOut()
+            FilterUtil.resetUsername()
+            Toast.makeText(this, "SignOut", Toast.LENGTH_SHORT).show()
+            updateUI(null)
+        }
     }
 
     private fun initNetworkChangeListener() {
@@ -386,7 +515,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
         mMap.setMapStyle(
             MapStyleOptions.loadRawResourceStyle(
-                this, R.raw.style_json))
+                this, R.raw.style_json
+            )
+        )
     }
 
     override fun onResume() {
