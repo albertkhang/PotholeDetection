@@ -1,6 +1,7 @@
 package com.albertkhang.potholedetection.util
 
 import android.content.Context
+import com.albertkhang.potholedetection.BuildConfig
 import com.albertkhang.potholedetection.model.cloud_database.IPothole
 import com.albertkhang.potholedetection.model.local_database.IDatabase
 import com.albertkhang.potholedetection.model.response.SettingsResponse
@@ -28,7 +29,7 @@ class LocalDatabaseUtil {
         }
 
         fun writeSettings(settingsResponse: SettingsResponse) {
-            if (SettingsUtil.isDebugVersion) {
+            if (BuildConfig.DEBUG) {
                 Paper.book().write(DEBUG_SETTINGS_BOOK, settingsResponse)
             } else {
                 Paper.book().write(RELEASE_SETTINGS_BOOK, settingsResponse)
@@ -36,7 +37,7 @@ class LocalDatabaseUtil {
         }
 
         fun readSettings(): SettingsResponse? {
-            return if (SettingsUtil.isDebugVersion) {
+            return if (BuildConfig.DEBUG) {
                 Paper.book().read(DEBUG_SETTINGS_BOOK, null)
             } else {
                 Paper.book().read(RELEASE_SETTINGS_BOOK, null)

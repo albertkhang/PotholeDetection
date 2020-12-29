@@ -23,13 +23,21 @@
           }
         },
         {
+          "client_id": "95597415349-ptng6qi9bf0r6kug9loae5srhesfvaqf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.albertkhang.potholedetection",
+            "certificate_hash": "f3c72afdd9e57c5caacc22d7149a246865f1db10"
+          }
+        },
+        {
           "client_id": "95597415349-72dm3bh25i3eu7qc5sfbv9gt8kum3vm3.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCqd7NUnxmsO8zYZ1ErSg5oYpYa-b5_n4Y"
+          "current_key": "AIzaSyAtzgQ12zhHfIxnDAFR8bjgju8crXuT2PY"
         }
       ],
       "services": {

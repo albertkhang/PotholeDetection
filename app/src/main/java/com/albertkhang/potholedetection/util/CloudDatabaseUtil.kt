@@ -35,7 +35,6 @@ class CloudDatabaseUtil {
             .addOnCompleteListener {
                 onCompleteListener.onComplete(it)
             }
-
     }
 
     fun write(

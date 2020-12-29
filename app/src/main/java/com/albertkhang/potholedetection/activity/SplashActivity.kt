@@ -1,11 +1,13 @@
 package com.albertkhang.potholedetection.activity
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import com.albertkhang.potholedetection.BuildConfig
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.service.SettingsService.Companion.SETTING_SERVICE_TAG
 import com.albertkhang.potholedetection.model.response.SettingsResponse
@@ -69,13 +71,16 @@ class SplashActivity : AppCompatActivity() {
 
         val settingsUtil = SettingsUtil()
         settingsUtil.getSettings(object : Callback<SettingsResponse> {
-            override fun onResponse(call: Call<SettingsResponse>, response: Response<SettingsResponse>) {
+            override fun onResponse(
+                call: Call<SettingsResponse>,
+                response: Response<SettingsResponse>
+            ) {
                 if (response.code() == 200) {
                     val newSettings = response.body()
                     logAllSettings(newSettings.toString())
 
                     if (newSettings != null) {
-                        if (SettingsUtil.isDebugVersion) {
+                        if (BuildConfig.DEBUG) {
                             LocalDatabaseUtil.writeSettings(newSettings)
                         } else {
                             val currentSettings = LocalDatabaseUtil.readSettings()

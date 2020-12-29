@@ -1,5 +1,7 @@
 package com.albertkhang.potholedetection.util
 
+import android.os.Build
+import com.albertkhang.potholedetection.BuildConfig
 import com.albertkhang.potholedetection.service.SettingsService
 import com.albertkhang.potholedetection.model.response.SettingsResponse
 import retrofit2.Call
@@ -10,7 +12,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 class SettingsUtil {
     companion object {
-        const val isDebugVersion = true
         private const val DATABASE_URL: String = "https://promising-env-291106.firebaseio.com/"
         private const val DEBUG_SETTINGS: String = "debug-settings"
         private const val RELEASE_SETTINGS: String = "release-settings"
@@ -45,15 +46,19 @@ class SettingsUtil {
      * @callback onFailure
      */
     fun getSettings(callback: Callback<SettingsResponse>) {
-        mSettingsService.getAll(getCurrentSettingType()).enqueue(object : Callback<SettingsResponse> {
-            override fun onResponse(call: Call<SettingsResponse>, response: Response<SettingsResponse>) {
-                callback.onResponse(call, response)
-            }
+        mSettingsService.getAll(getCurrentSettingType())
+            .enqueue(object : Callback<SettingsResponse> {
+                override fun onResponse(
+                    call: Call<SettingsResponse>,
+                    response: Response<SettingsResponse>
+                ) {
+                    callback.onResponse(call, response)
+                }
 
-            override fun onFailure(call: Call<SettingsResponse>, throwable: Throwable) {
-                callback.onFailure(call, throwable)
-            }
-        })
+                override fun onFailure(call: Call<SettingsResponse>, throwable: Throwable) {
+                    callback.onFailure(call, throwable)
+                }
+            })
     }
 
     /**
@@ -63,7 +68,8 @@ class SettingsUtil {
      * @return settings type
      */
     private fun getCurrentSettingType(): String {
-        return if (isDebugVersion) DEBUG_SETTINGS else RELEASE_SETTINGS
+
+        return if (BuildConfig.DEBUG) DEBUG_SETTINGS else RELEASE_SETTINGS
     }
 
     init {

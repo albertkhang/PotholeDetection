@@ -15,6 +15,7 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.albertkhang.potholedetection.BuildConfig
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.animation.AlphaAnimation
 import com.albertkhang.potholedetection.broadcast.NetworkChangeReceiver
@@ -56,6 +57,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var mGoogleSignInClient: GoogleSignInClient
     private lateinit var gso: GoogleSignInOptions
 
+    private val polylines = ArrayList<Polyline>()
+
     private val RC_SIGN_IN = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,12 +76,20 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun onAddLinesReady(objects: () -> Unit) {
+        getAndDrawRoad()
+        objects.invoke()
+    }
+
+    private fun getAndDrawRoad() {
         val account = GoogleSignIn.getLastSignedInAccount(this)
         var username = "anonymous"
 
         if (account != null) {
             username = account.email.toString()
         }
+
+        if (username == "anonymous")
+            return
 
         mCloudDatabaseUtil.read(username) {
             if (it.isSuccessful) {
@@ -124,6 +135,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                                 .add(endLocation)
                         )
 
+                        polylines.add(polyline)
+
                         if (iri >= 0.2) {
                             polyline.tag = "A"
                         }
@@ -135,8 +148,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                         stylePolyline(polyline)
                     }
                 }
-
-                objects.invoke()
             }
         }
     }
@@ -248,6 +259,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
             // Signed in successfully, show authenticated UI.
             updateUI(account)
+
+            getAndDrawRoad()
+
+            Toast.makeText(this, "Đang lấy dữ liệu đoạn đường của bạn.", Toast.LENGTH_SHORT).show()
         } catch (e: ApiException) {
             // The ApiException status code indicates the detailed failure reason.
             // Please refer to the GoogleSignInStatusCodes class reference for more information.
@@ -259,7 +274,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private var settingsCount = 0
 
     private fun showSettings() {
-        if (SettingsUtil.isDebugVersion) {
+        if (BuildConfig.DEBUG) {
             settingsCount++
 
             if (settingsCount == 5) {
@@ -280,7 +295,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             mLegendView!!.visibility = View.INVISIBLE
             btnLegend.isClickable = false
 
-            if (SettingsUtil.isDebugVersion) {
+            if (BuildConfig.DEBUG) {
                 mLegendView!!.setOnClickListener {
                     // show data size added
                     val agDatas = LocalDatabaseUtil.read(
@@ -437,6 +452,17 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    private fun removePolylines() {
+        if (polylines.isNotEmpty()) {
+            Log.d(TAG, "polylines size=${polylines.size}")
+            polylines.forEach {
+                it.remove()
+            }
+
+            polylines.clear()
+        }
+    }
+
     private fun signOut() {
         val account = GoogleSignIn.getLastSignedInAccount(this)
         if (account != null) {
@@ -444,6 +470,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             FilterUtil.resetUsername()
             Toast.makeText(this, "SignOut", Toast.LENGTH_SHORT).show()
             updateUI(null)
+
+            removePolylines()
         }
     }
 

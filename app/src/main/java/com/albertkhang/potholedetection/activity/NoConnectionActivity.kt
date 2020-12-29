@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.albertkhang.potholedetection.BuildConfig
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.model.local_database.IAGVector
 import com.albertkhang.potholedetection.model.local_database.ILocation
@@ -38,13 +39,13 @@ class NoConnectionActivity : AppCompatActivity() {
                 Toast.makeText(baseContext, "Hãy kiểm tra lại mạng.", Toast.LENGTH_SHORT).show()
             }
 
-            if (SettingsUtil.isDebugVersion) {
+            if (BuildConfig.DEBUG) {
                 showDataSize()
             }
         }
 
         btnTryAgain.setOnLongClickListener {
-            if (SettingsUtil.isDebugVersion) {
+            if (BuildConfig.DEBUG) {
                 deleteData()
             }
 

@@ -4,6 +4,14 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: 'com.google.gms.google-services'
 
 android {
+    signingConfigs {
+        'sign name' {
+            storeFile file(kotlin_version)
+            storePassword kotlin_version
+            keyAlias kotlin_version
+            keyPassword kotlin_version
+        }
+    }
     compileSdkVersion 30
     buildToolsVersion "29.0.3"
 
