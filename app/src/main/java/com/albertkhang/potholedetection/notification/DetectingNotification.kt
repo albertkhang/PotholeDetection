@@ -54,7 +54,7 @@ class DetectingNotification : Service() {
 
             // TODO: set setting this
             // the interval before auto stop recording
-            val stopRecordingInterval = 1000 * 60 * 5 // 5 min
+            val stopRecordingInterval = 1000 * 10 // 10 seconds
 
             var lastIRI = 0f
 
@@ -68,7 +68,7 @@ class DetectingNotification : Service() {
                         override fun onUpdate(accelerometer: IVector3D, gravity: IVector3D) {
                             val iri = IRIUtil.getIRI(accelerometer, gravity)
                             Log.d(TAG, "mAccelerometerSensor onUpdate iri=$iri")
-                            Toast.makeText(context, "mAccelerometerSensor onUpdate iri=$iri", Toast.LENGTH_SHORT).show()
+//                            Toast.makeText(context, "mAccelerometerSensor onUpdate iri=$iri", Toast.LENGTH_SHORT).show()
 
                             if (iri != lastIRI && iri >= minIRI) {
                                 FileUtil.writeAccelerometerCache(
