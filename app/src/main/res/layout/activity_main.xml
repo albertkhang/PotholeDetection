@@ -42,13 +42,47 @@
         android:id="@+id/btnAccount"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:layout_alignParentLeft="true"
         android:layout_above="@id/btnLegend"
+        android:layout_alignParentLeft="true"
         android:layout_marginLeft="25dp"
         android:layout_marginBottom="20dp"
         android:background="@drawable/bg_white_circle"
         android:elevation="2dp"
-        android:src="@drawable/ic_sign_in"/>
+        android:src="@drawable/ic_sign_in" />
+
+    <RadioGroup
+        android:id="@+id/radioGroup"
+        style="@style/Base.CardView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/btnMyLocation"
+        android:layout_alignRight="@id/btnMyLocation"
+        android:layout_marginBottom="20dp"
+        android:background="@drawable/bg_white_style"
+        android:padding="8dp">
+
+        <RadioButton
+            android:id="@+id/radioNo"
+            style="@style/BodyTextStyles"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:enabled="true"
+            android:text="Không" />
+
+        <RadioButton
+            android:id="@+id/radioAll"
+            style="@style/BodyTextStyles"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tất Cả" />
+
+        <RadioButton
+            android:id="@+id/radioOnlyYou"
+            style="@style/BodyTextStyles"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chỉ Bạn" />
+    </RadioGroup>
 
     <!--TODO: add bottom navigation-->
 </RelativeLayout>

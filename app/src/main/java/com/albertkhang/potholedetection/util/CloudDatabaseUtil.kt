@@ -59,4 +59,14 @@ class CloudDatabaseUtil {
                 onCompleteListener.onComplete(it)
             }
     }
+
+    fun readAll(
+        onCompleteListener: OnCompleteListener<QuerySnapshot>
+    ) {
+        db.collection(COLLECTION_GEOPOINTS)
+            .get()
+            .addOnCompleteListener {
+                onCompleteListener.onComplete(it)
+            }
+    }
 }

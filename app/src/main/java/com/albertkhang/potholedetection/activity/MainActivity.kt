@@ -69,18 +69,156 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         addEvent()
     }
 
-    private fun onMapReady() {
-        onAddLinesReady {
-            root_view.removeView(mPreparingMapProgress)
+    private fun addControl() {
+        initPreparingMapView()
+        initNetworkChangeListener()
+
+        (map as SupportMapFragment).getMapAsync(this)
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        mCloudDatabaseUtil = CloudDatabaseUtil()
+
+        gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .build()
+
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
+
+        val account = GoogleSignIn.getLastSignedInAccount(this)
+        if (account != null) {
+            Log.d(
+                TAG,
+                "id=${account.id}, email=${account.email}, displayName=${account.displayName}"
+            )
+        }
+        updateUI(account)
+
+        currentRadio = radioNo.id
+        radioNo.isChecked = true
+    }
+
+    private fun addEvent() {
+        radioGroup.setOnCheckedChangeListener { group, checkedId ->
+            synchronized(currentRadio) {
+                currentRadio = checkedId
+            }
+
+            when (checkedId) {
+                R.id.radioNo -> {
+                    Log.d(TAG, "checked=radioNo")
+                    clearRoads()
+                }
+
+                R.id.radioAll -> {
+                    Log.d(TAG, "checked=radioAll")
+                    Toast.makeText(this, "Đang lấy dữ liệu...", Toast.LENGTH_SHORT).show()
+                    drawAllRoads()
+                }
+
+                R.id.radioOnlyYou -> {
+                    Log.d(TAG, "checked=radioOnlyYou")
+                    drawUserRoads()
+                }
+            }
+        }
+
+        btnMyLocation.setOnClickListener {
+            moveToMyLocation()
+            removeLegendView()
+            showSettings()
+        }
+
+        btnLegend.setOnClickListener {
+            if (mLegendView == null) {
+                initLegendView()
+            }
+
+            addLegendView()
+        }
+
+        btnAccount.setOnClickListener {
+            signIn()
+        }
+
+        btnAccount.setOnLongClickListener {
+            showConfirmSignOutDialog()
+            true
         }
     }
 
-    private fun onAddLinesReady(objects: () -> Unit) {
-        getAndDrawRoad()
-        objects.invoke()
+    private fun clearRoads() {
+        mMap.clear()
     }
 
-    private fun getAndDrawRoad() {
+    private var currentRadio = -1
+
+    private fun drawAllRoads() {
+        mCloudDatabaseUtil.readAll {
+            synchronized(currentRadio) {
+                if (currentRadio == R.id.radioAll) {
+                    if (it.isSuccessful) {
+                        val documents = it.result.documents
+
+                        var iri: Float
+                        var placeId: String
+
+                        var startMap: HashMap<*, *>
+                        var startLat: Double
+                        var startLng: Double
+                        var startLocation: LatLng
+
+                        var endMap: HashMap<*, *>
+                        var endLat: Double
+                        var endLng: Double
+                        var endLocation: LatLng
+
+                        var polyline: Polyline
+
+                        documents.forEach {
+                            val data = it.data
+
+                            if (data != null) {
+//                        Log.d(TAG, "id=${it.id}, data=$data")
+
+                                iri = (data["iri"] as Double).toFloat()
+                                placeId = data["placeId"] as String
+
+                                startMap = data["startLocation"] as HashMap<*, *>
+                                startLat = startMap["latitude"] as Double
+                                startLng = startMap["longitude"] as Double
+                                startLocation = LatLng(startLat, startLng)
+
+                                endMap = data["endLocation"] as HashMap<*, *>
+                                endLat = endMap["latitude"] as Double
+                                endLng = endMap["longitude"] as Double
+                                endLocation = LatLng(endLat, endLng)
+
+                                polyline = mMap.addPolyline(
+                                    PolylineOptions()
+                                        .add(startLocation)
+                                        .add(endLocation)
+                                )
+
+                                polylines.add(polyline)
+
+                                if (iri >= 0.2) {
+                                    polyline.tag = "A"
+                                }
+
+                                if (iri >= 0.3) {
+                                    polyline.tag = "B"
+                                }
+
+                                stylePolyline(polyline)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun drawUserRoads() {
         val account = GoogleSignIn.getLastSignedInAccount(this)
         var username = "anonymous"
 
@@ -92,64 +230,72 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             return
 
         mCloudDatabaseUtil.read(username) {
-            if (it.isSuccessful) {
-                val documents = it.result.documents
+            synchronized(currentRadio) {
+                if (currentRadio == R.id.radioOnlyYou) {
+                    if (it.isSuccessful) {
+                        val documents = it.result.documents
 
-                var iri: Float
-                var placeId: String
+                        var iri: Float
+                        var placeId: String
 
-                var startMap: HashMap<*, *>
-                var startLat: Double
-                var startLng: Double
-                var startLocation: LatLng
+                        var startMap: HashMap<*, *>
+                        var startLat: Double
+                        var startLng: Double
+                        var startLocation: LatLng
 
-                var endMap: HashMap<*, *>
-                var endLat: Double
-                var endLng: Double
-                var endLocation: LatLng
+                        var endMap: HashMap<*, *>
+                        var endLat: Double
+                        var endLng: Double
+                        var endLocation: LatLng
 
-                var polyline: Polyline
+                        var polyline: Polyline
 
-                documents.forEach {
-                    val data = it.data
+                        documents.forEach {
+                            val data = it.data
 
-                    if (data != null) {
+                            if (data != null) {
 //                        Log.d(TAG, "id=${it.id}, data=$data")
 
-                        iri = (data["iri"] as Double).toFloat()
-                        placeId = data["placeId"] as String
+                                iri = (data["iri"] as Double).toFloat()
+                                placeId = data["placeId"] as String
 
-                        startMap = data["startLocation"] as HashMap<*, *>
-                        startLat = startMap["latitude"] as Double
-                        startLng = startMap["longitude"] as Double
-                        startLocation = LatLng(startLat, startLng)
+                                startMap = data["startLocation"] as HashMap<*, *>
+                                startLat = startMap["latitude"] as Double
+                                startLng = startMap["longitude"] as Double
+                                startLocation = LatLng(startLat, startLng)
 
-                        endMap = data["endLocation"] as HashMap<*, *>
-                        endLat = endMap["latitude"] as Double
-                        endLng = endMap["longitude"] as Double
-                        endLocation = LatLng(endLat, endLng)
+                                endMap = data["endLocation"] as HashMap<*, *>
+                                endLat = endMap["latitude"] as Double
+                                endLng = endMap["longitude"] as Double
+                                endLocation = LatLng(endLat, endLng)
 
-                        polyline = mMap.addPolyline(
-                            PolylineOptions()
-                                .add(startLocation)
-                                .add(endLocation)
-                        )
+                                polyline = mMap.addPolyline(
+                                    PolylineOptions()
+                                        .add(startLocation)
+                                        .add(endLocation)
+                                )
 
-                        polylines.add(polyline)
+                                polylines.add(polyline)
 
-                        if (iri >= 0.2) {
-                            polyline.tag = "A"
+                                if (iri >= 0.2) {
+                                    polyline.tag = "A"
+                                }
+
+                                if (iri >= 0.3) {
+                                    polyline.tag = "B"
+                                }
+
+                                stylePolyline(polyline)
+                            }
                         }
-
-                        if (iri >= 0.3) {
-                            polyline.tag = "B"
-                        }
-
-                        stylePolyline(polyline)
                     }
                 }
             }
         }
+    }
+
+    private fun onMapReady() {
+        root_view.removeView(mPreparingMapProgress)
     }
 
     private val POLYLINE_STROKE_WIDTH_PX = 12
@@ -192,31 +338,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    private fun addEvent() {
-        btnMyLocation.setOnClickListener {
-            moveToMyLocation()
-            removeLegendView()
-            showSettings()
-        }
-
-        btnLegend.setOnClickListener {
-            if (mLegendView == null) {
-                initLegendView()
-            }
-
-            addLegendView()
-        }
-
-        btnAccount.setOnClickListener {
-            signIn()
-        }
-
-        btnAccount.setOnLongClickListener {
-            showConfirmSignOutDialog()
-            true
-        }
-    }
-
     private fun showConfirmSignOutDialog() {
         val dialog = Dialog(this, R.style.RoundCornerDialog)
         dialog.setContentView(R.layout.dialog_two_button)
@@ -226,6 +347,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         dialog.findViewById<Button>(R.id.agree)
             .setOnClickListener {
                 signOut()
+                radioNo.isChecked = true
                 dialog.dismiss()
             }
         dialog.findViewById<TextView>(R.id.title).text = "Đăng Xuất"
@@ -260,7 +382,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             // Signed in successfully, show authenticated UI.
             updateUI(account)
 
-            getAndDrawRoad()
+//            getAndDrawRoad()
 
             Toast.makeText(this, "Đang lấy dữ liệu đoạn đường của bạn.", Toast.LENGTH_SHORT).show()
         } catch (e: ApiException) {
@@ -405,42 +527,21 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    private fun addControl() {
-        initPreparingMapView()
-        initNetworkChangeListener()
-
-        (map as SupportMapFragment).getMapAsync(this)
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
-        mCloudDatabaseUtil = CloudDatabaseUtil()
-
-        gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestEmail()
-            .build()
-
-        mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
-
-        val account = GoogleSignIn.getLastSignedInAccount(this)
-        if (account != null) {
-            Log.d(
-                TAG,
-                "id=${account.id}, email=${account.email}, displayName=${account.displayName}"
-            )
-        }
-        updateUI(account)
-    }
-
     private fun updateUI(account: GoogleSignInAccount?) {
         Log.d(TAG, "account=$account")
         if (account == null) {
             // SignIn UI
             btnAccount.setImageResource(R.drawable.ic_sign_in)
+
+            radioOnlyYou.visibility = View.GONE
         } else {
             Glide.with(this)
                 .load(account.photoUrl)
                 .circleCrop()
                 .placeholder(R.drawable.bg_white_circle)
                 .into(btnAccount)
+
+            radioOnlyYou.visibility = View.VISIBLE
         }
     }
 
@@ -452,17 +553,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    private fun removePolylines() {
-        if (polylines.isNotEmpty()) {
-            Log.d(TAG, "polylines size=${polylines.size}")
-            polylines.forEach {
-                it.remove()
-            }
-
-            polylines.clear()
-        }
-    }
-
     private fun signOut() {
         val account = GoogleSignIn.getLastSignedInAccount(this)
         if (account != null) {
@@ -470,8 +560,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             FilterUtil.resetUsername()
             Toast.makeText(this, "SignOut", Toast.LENGTH_SHORT).show()
             updateUI(null)
-
-            removePolylines()
         }
     }
 
