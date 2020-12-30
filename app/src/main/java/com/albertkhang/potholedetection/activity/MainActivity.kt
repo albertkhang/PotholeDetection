@@ -111,12 +111,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
                 R.id.radioAll -> {
                     Log.d(TAG, "checked=radioAll")
-                    Toast.makeText(this, "Đang lấy dữ liệu...", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Đang lấy tất cả dữ liệu...", Toast.LENGTH_SHORT).show()
                     drawAllRoads()
                 }
 
                 R.id.radioOnlyYou -> {
                     Log.d(TAG, "checked=radioOnlyYou")
+                    Toast.makeText(this, "Đang lấy dữ liệu của bạn...", Toast.LENGTH_SHORT).show()
                     drawUserRoads()
                 }
             }
@@ -137,12 +138,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         btnAccount.setOnClickListener {
-            signIn()
-        }
-
-        btnAccount.setOnLongClickListener {
-            showConfirmSignOutDialog()
-            true
+            val account = GoogleSignIn.getLastSignedInAccount(this)
+            if (account == null) {
+                signIn()
+            } else {
+                showConfirmSignOutDialog()
+            }
         }
     }
 
@@ -381,10 +382,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
             // Signed in successfully, show authenticated UI.
             updateUI(account)
-
-//            getAndDrawRoad()
-
-            Toast.makeText(this, "Đang lấy dữ liệu đoạn đường của bạn.", Toast.LENGTH_SHORT).show()
         } catch (e: ApiException) {
             // The ApiException status code indicates the detailed failure reason.
             // Please refer to the GoogleSignInStatusCodes class reference for more information.
@@ -534,6 +531,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             btnAccount.setImageResource(R.drawable.ic_sign_in)
 
             radioOnlyYou.visibility = View.GONE
+            signOutIcon.visibility = View.INVISIBLE
         } else {
             Glide.with(this)
                 .load(account.photoUrl)
@@ -542,6 +540,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 .into(btnAccount)
 
             radioOnlyYou.visibility = View.VISIBLE
+            signOutIcon.visibility = View.VISIBLE
         }
     }
 

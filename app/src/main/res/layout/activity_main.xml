@@ -50,6 +50,19 @@
         android:elevation="2dp"
         android:src="@drawable/ic_sign_in" />
 
+    <ImageView
+        android:id="@+id/signOutIcon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_alignLeft="@id/btnAccount"
+        android:layout_alignTop="@id/btnAccount"
+        android:layout_marginLeft="28dp"
+        android:layout_marginTop="28dp"
+        android:background="@drawable/bg_white_circle"
+        android:elevation="3dp"
+        android:src="@drawable/ic_sign_out"
+        android:visibility="invisible" />
+
     <RadioGroup
         android:id="@+id/radioGroup"
         style="@style/Base.CardView"
@@ -59,13 +72,18 @@
         android:layout_alignRight="@id/btnMyLocation"
         android:layout_marginBottom="20dp"
         android:background="@drawable/bg_white_style"
-        android:padding="8dp">
+        android:elevation="2dp"
+        android:paddingLeft="2dp"
+        android:paddingTop="4dp"
+        android:paddingRight="8dp"
+        android:paddingBottom="4dp">
 
         <RadioButton
             android:id="@+id/radioNo"
             style="@style/BodyTextStyles"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:buttonTint="@color/colorMain"
             android:enabled="true"
             android:text="Không" />
 
@@ -74,6 +92,7 @@
             style="@style/BodyTextStyles"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:buttonTint="@color/colorMain"
             android:text="Tất Cả" />
 
         <RadioButton
@@ -81,6 +100,7 @@
             style="@style/BodyTextStyles"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:buttonTint="@color/colorMain"
             android:text="Chỉ Bạn" />
     </RadioGroup>
 
