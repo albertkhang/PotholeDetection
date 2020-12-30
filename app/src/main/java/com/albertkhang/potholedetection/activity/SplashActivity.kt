@@ -22,8 +22,6 @@ import retrofit2.Callback
 import retrofit2.Response
 
 class SplashActivity : AppCompatActivity() {
-    private val SPLASH_SCREEN_TIME: Long = 1000 // milliseconds
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
@@ -34,17 +32,6 @@ class SplashActivity : AppCompatActivity() {
     private fun checkConnection() {
         if (NetworkUtil.isNetworkAvailable(this@SplashActivity)) {
             getSettings()
-        } else {
-            showNoConnectionActivityAfterAWhile()
-            if (LocalDatabaseUtil.readSettings()?.version != 0) {
-                showDetectNotification()
-            }
-        }
-    }
-
-    private fun showDetectNotification() {
-        if (!DetectingNotification.isStarted) {
-            DetectingNotification.startService(this)
         }
     }
 
@@ -65,10 +52,6 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun getSettings() {
-//        if (DetectingNotification.isStarted) {
-//            DetectingNotification.stopService(this@SplashActivity)
-//        }
-
         val settingsUtil = SettingsUtil()
         settingsUtil.getSettings(object : Callback<SettingsResponse> {
             override fun onResponse(
@@ -103,8 +86,6 @@ class SplashActivity : AppCompatActivity() {
                     val intent = getPermissionIntentResult()
                     startActivity(intent)
                     finish()
-
-                    showDetectNotification()
                 }
             }
 
@@ -113,13 +94,5 @@ class SplashActivity : AppCompatActivity() {
             }
 
         })
-    }
-
-    private fun showNoConnectionActivityAfterAWhile() {
-        Handler(Looper.getMainLooper()).postDelayed({
-            val intent = Intent(this@SplashActivity, NoConnectionActivity::class.java)
-            startActivity(intent)
-            finish()
-        }, SPLASH_SCREEN_TIME)
     }
 }

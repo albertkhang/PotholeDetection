@@ -12,6 +12,10 @@ android {
             keyPassword kotlin_version
         }
     }
+    packagingOptions {
+        exclude 'classes.dex'
+        exclude '**.**'
+    }
     compileSdkVersion 30
     buildToolsVersion "29.0.3"
 

@@ -15,12 +15,12 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.albertkhang.potholedetection.BuildConfig
 import com.albertkhang.potholedetection.R
 import com.albertkhang.potholedetection.animation.AlphaAnimation
 import com.albertkhang.potholedetection.broadcast.NetworkChangeReceiver
 import com.albertkhang.potholedetection.model.local_database.IAGVector
 import com.albertkhang.potholedetection.model.local_database.ILocation
+import com.albertkhang.potholedetection.notification.DetectingNotification
 import com.albertkhang.potholedetection.util.*
 import com.bumptech.glide.Glide
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -37,6 +37,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
+import io.grpc.android.BuildConfig
 import kotlinx.android.synthetic.main.activity_main.*
 
 @SuppressLint("MissingPermission")
@@ -95,6 +96,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         currentRadio = radioNo.id
         radioNo.isChecked = true
+
+        showDetectNotification()
     }
 
     private fun addEvent() {
@@ -112,12 +115,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 R.id.radioAll -> {
                     Log.d(TAG, "checked=radioAll")
                     Toast.makeText(this, "Đang lấy tất cả dữ liệu...", Toast.LENGTH_SHORT).show()
+                    clearRoads()
                     drawAllRoads()
                 }
 
                 R.id.radioOnlyYou -> {
                     Log.d(TAG, "checked=radioOnlyYou")
                     Toast.makeText(this, "Đang lấy dữ liệu của bạn...", Toast.LENGTH_SHORT).show()
+                    clearRoads()
                     drawUserRoads()
                 }
             }
@@ -144,6 +149,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             } else {
                 showConfirmSignOutDialog()
             }
+        }
+    }
+
+    private fun showDetectNotification() {
+        if (!DetectingNotification.isStarted) {
+            DetectingNotification.startService(this)
         }
     }
 

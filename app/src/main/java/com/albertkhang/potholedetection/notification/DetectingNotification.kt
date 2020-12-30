@@ -12,6 +12,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.albertkhang.potholedetection.R
@@ -65,9 +66,10 @@ class DetectingNotification : Service() {
                 mAccelerometerSensor =
                     object : AccelerometerSensor(context) {
                         override fun onUpdate(accelerometer: IVector3D, gravity: IVector3D) {
-                            Log.d(TAG, "AccelerometerSensor onUpdate isRecording")
-
                             val iri = IRIUtil.getIRI(accelerometer, gravity)
+                            Log.d(TAG, "mAccelerometerSensor onUpdate iri=$iri")
+                            Toast.makeText(context, "mAccelerometerSensor onUpdate iri=$iri", Toast.LENGTH_SHORT).show()
+
                             if (iri != lastIRI && iri >= minIRI) {
                                 FileUtil.writeAccelerometerCache(
                                     context,
@@ -81,7 +83,8 @@ class DetectingNotification : Service() {
                 var lastLocationEntry = LocationEntry(LatLng(0.0, 0.0), 0f)
                 mLocationSensor = object : LocationSensor(context) {
                     override fun onUpdate(location: Location) {
-                        Log.d(TAG, "LocationSensor onUpdate")
+                        Log.d(TAG, "LocationSensor onUpdate speed=${location.speed}")
+//                        Toast.makeText(context, "LocationSensor onUpdate speed=${location.speed}", Toast.LENGTH_SHORT).show()
 
                         if (LatLng(
                                 location.latitude,
@@ -90,21 +93,27 @@ class DetectingNotification : Service() {
                         ) return
 
                         // TODO: set setting this
-                        val minSpeed = 2.77778 // m/s = 10 km/h
+                        val minSpeed = 2.77778 //2.77778 m/s = 10 km/h
 
                         if (location.speed >= minSpeed) {
-                            Log.d(TAG, "location.speed >= minSpeed")
                             lastRecordTime = System.currentTimeMillis()
                             isRecording = true
                             mAccelerometerSensor.start()
                         }
 
                         if (System.currentTimeMillis() - lastRecordTime >= stopRecordingInterval) {
-                            Log.d(TAG, " >= stopRecordingInterval")
+                            Log.d(TAG, "not equal stopRecordingInterval")
+//                            Toast.makeText(
+//                                context,
+//                                "not equal stopRecordingInterval",
+//                                Toast.LENGTH_SHORT
+//                            ).show()
+
                             isRecording = false
                             mAccelerometerSensor.stop()
                         } else if (isRecording) {
                             Log.d(TAG, "isRecording")
+//                            Toast.makeText(context, "isRecording", Toast.LENGTH_SHORT).show()
 
                             lastLocationEntry = LocationEntry(
                                 LatLng(location.latitude, location.longitude),

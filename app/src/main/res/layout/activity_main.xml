@@ -103,6 +103,4 @@
             android:buttonTint="@color/colorMain"
             android:text="Chỉ Bạn" />
     </RadioGroup>
-
-    <!--TODO: add bottom navigation-->
 </RelativeLayout>
