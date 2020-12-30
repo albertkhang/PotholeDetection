@@ -100,6 +100,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         showDetectNotification()
     }
 
+//    private var uploadCount = 0
+
     private fun addEvent() {
         radioGroup.setOnCheckedChangeListener { group, checkedId ->
             synchronized(currentRadio) {
@@ -129,6 +131,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         btnMyLocation.setOnClickListener {
+//            if (uploadCount == 10) {
+//                uploadCount = 0
+//                Toast.makeText(this, "Upload data", Toast.LENGTH_SHORT).show()
+//                Log.d(TAG, "Upload data")
+//                FilterUtil.run(this)
+//            }
+//
+//            uploadCount++
+
             moveToMyLocation()
             removeLegendView()
             showSettings()
