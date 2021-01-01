@@ -32,6 +32,9 @@ class SplashActivity : AppCompatActivity() {
     private fun checkConnection() {
         if (NetworkUtil.isNetworkAvailable(this@SplashActivity)) {
             getSettings()
+        } else {
+            startActivity(Intent(this, NoConnectionActivity::class.java))
+            finish()
         }
     }
 
