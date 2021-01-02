@@ -1,0 +1,56 @@
+{
+  "project_info": {
+    "project_number": "95597415349",
+    "firebase_url": "https://promising-env-291106.firebaseio.com",
+    "project_id": "promising-env-291106",
+    "storage_bucket": "promising-env-291106.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:95597415349:android:6d1ce2a662857d67ebe7fc",
+        "android_client_info": {
+          "package_name": "com.albertkhang.potholedetection"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "95597415349-7ogm0ark1v0kpe13m80mppnheot1cfbi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.albertkhang.potholedetection",
+            "certificate_hash": "df2bae2b03cf17a6907284ba7aa18aef2cd4fb54"
+          }
+        },
+        {
+          "client_id": "95597415349-ptng6qi9bf0r6kug9loae5srhesfvaqf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.albertkhang.potholedetection",
+            "certificate_hash": "f3c72afdd9e57c5caacc22d7149a246865f1db10"
+          }
+        },
+        {
+          "client_id": "95597415349-72dm3bh25i3eu7qc5sfbv9gt8kum3vm3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAtzgQ12zhHfIxnDAFR8bjgju8crXuT2PY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "95597415349-72dm3bh25i3eu7qc5sfbv9gt8kum3vm3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
